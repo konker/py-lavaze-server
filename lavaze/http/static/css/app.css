@@ -1,0 +1,102 @@
+
+/*
+dkblue: #002635
+midblue: #003540
+red: #ab1a25
+orange: #d97925
+cream: #efe7be
+*/
+
+
+header {
+  position: fixed;
+  width: 100%;
+  background: #bbb;
+  //box-shadow: 0 4px 3px #ccc;
+  //border-radius: 0 0 42px 0;
+  }
+  .navbar-inner {
+    padding: 3px 12px;
+    }
+
+  header h1 {
+    //background: url(../img/logo.png) 0 0 no-repeat;
+    color: #000;
+    font-family: Lato, Verdana, sans-serif;
+    font-weight: 300;
+    font-size: 160%;
+    padding: 0 0 0px 24px;
+    margin: 0;
+    }
+    header h1.loading {
+      background: url(../img/loading.gif) 3px 12px no-repeat;
+      }
+
+body {
+  background: #eee;
+  padding: 0;
+  }
+
+.alert {
+    margin-top: 12px;
+    display: none;
+    }
+#container {
+   padding-top: 6em;
+   }
+#templates { display: none; }
+
+
+#mapCanvas {
+    width: 450px;
+    height: 400px;
+    border: 1px dashed #ccc;
+    }
+
+section {
+  margin: 0 0 1.5em 0;
+  border-radius: 6px;
+  }
+  section .section-body {
+    margin: 0 1.5em;
+    display: block;
+    }
+  section h2 {
+    color: #555;
+    border-bottom: 1px dotted #002635;
+    margin: 0 0 1.0em 0;
+    font-family: Lato, sans-serif;                                                                                                                          
+    font-weight: 400;
+    font-size: 160%;
+    line-height: 1.5;
+    padding: 0 0.5em;
+    }
+    section h2 i {
+      vertical-align: baseline !important;
+      }
+
+    #master dd.status {
+      font-weight: bold;
+      }
+      #master .section-body {
+        position: relative;
+        }
+
+
+#log pre {
+  background: #fff;
+  }
+#logRefresh { display: block; }
+
+footer {
+  background: #ddd;
+  padding: 1.0em;
+  border-top: 1px solid #aaa;
+  font-size: 90%;
+  }
+  
+h2 .btn-small i.icon-white {
+    vertical-align: middle !important;
+}
+
+

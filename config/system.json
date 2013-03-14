@@ -1,0 +1,11 @@
+{
+    "pidfile":  "var/lavaze.pid",
+    "logfile":  "log/lavaze.log",
+    "datafile": "data/results.txt",
+
+    "debug": false,
+
+    "http_host": "0.0.0.0",
+    "http_port": 8080
+}
+
