@@ -1,0 +1,81 @@
+
+Server:
+  getCtxMessage:
+    <ContextML>
+      <ctxEL>
+        <task>[taskStr]</task>
+        <operation>start|stop|restart</operation>
+        <userHeight>[heightStr]</userHeight>
+        <error>NoUserHeight</error>
+      </ctxEl>
+    </ContextML>
+    
+
+DemoClient:
+  sendCtxUpdate:  // in a loop every 2000ms
+    <ContextML device="[imei]" type="tablet"></ContextML>
+      |
+       --> parse server XML response
+           |
+            --> handler.sendMessage("[operation]:[task]")
+
+
+Possible approaches
+------------------------------------------------------------------------------
+
+1) Keep the current client protocol, but refresh the UI
+    + no need to re-engineer client
+    - polling not very efficient?
+
+2) Change the client protocol to something more efficient e.g. websockets?
+    - need to re-engineer client
+    - is it actually more efficient in terms of battery?
+
+
+Most basic fix
+------------------------------------------------------------------------------
+
+- Make sure service is running on server
+    - does it need to be restarted for each trial?
+- Get map to zoom correctly
+- Add scale to map
+- Make sure works with current fieldtest m-Loma
+X Get hostapd to work on eeepc
+    - although still need inet connection
+        - via 3G dongle on eeepc?
+
+
+Initial version
+------------------------------------------------------------------------------
+
+- Keep current client protocol
+- non-map ui
+    - text entry box for absolute
+    - code for entering relative values:
+        x>m: x metres in front of marker m e.g. 3>6
+        x<m: x metres behind marker m e.g. 3 < 6
+
+- keyboard shortcuts
+- save data to local server
+    - pos caching?
+
+
+Extras
+------------------------------------------------------------------------------
+
+- Configurable Trial:
+    - read in external.txt to create trial configuration
+
+- Store trials
+    - extra metadata, e.g. name
+    - list of trials
+    - other crud stuff
+
+- Trial runs:
+    - i.e "instance" of trial
+    - metadata, date, location, etc.
+    - Information about subject?
+    - Other notes?
+
+- Sync to server
+
