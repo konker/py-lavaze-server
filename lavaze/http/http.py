@@ -75,11 +75,15 @@ class HttpServer(object):
         #bottle.route('/RegisterDevice.json', method='POST')(self.post_register_device)
         #bottle.route('/NextTask.json', method='POST')(self.post_next_task)
         #bottle.route('/PreviousTask.json', method='POST')(self.post_prev_task)
+
+        #bottle.route('/RegisterTasks.json', method='POST')(self.post_register_tasks)
+        #bottle.route('/RegisterMarkers.json', method='POST')(self.post_register_markers)
+        #bottle.route('/RegisterSubject.json', method='POST')(self.post_register_subject)
         '''
 
         # new routes
         bottle.route('/devices', method='GET')(self.get_devices)
-        bottle.route('/RegisterDevice.xml', method='POST')(self.register_device_xml)
+        bottle.route('/devices', method='POST')(self.register_device_xml)
 
         bottle.route('/tasks', method='GET')(self.get_tasks)
         bottle.route('/tasks', method='POST')(self.register_tasks)
@@ -95,10 +99,6 @@ class HttpServer(object):
         bottle.route('/subjects/<id>', method='GET')(self.get_subject)
         bottle.route('/subjects/<id>', method='PUT')(self.update_subject)
         bottle.route('/subjects/<id>', method='DELETE')(self.delete_subject)
-
-        #bottle.route('/RegisterTasks.json', method='POST')(self.post_register_tasks)
-        #bottle.route('/RegisterMarkers.json', method='POST')(self.post_register_markers)
-        #bottle.route('/RegisterSubject.json', method='POST')(self.post_register_subject)
 
 
     def get_subjects(self):
@@ -122,7 +122,7 @@ class HttpServer(object):
             ret = {"status":"ERROR", "body":"Bad parameters"}
 
         else:
-            subject_id = len(self.subjects)
+            subject_id = str(len(self.subjects))
             subject = {
                 'id': subject_id,
                 'name': subject['name'],
@@ -135,44 +135,53 @@ class HttpServer(object):
         return json.dumps(ret)
 
 
-    def get_subject(self, subject_id):
-        if not subject_id in self.subjects:
+    def get_subject(self, id):
+        if not id in self.subjects:
             response.status = 404
             ret = {"status":"ERROR", "body":"Subject not found"}
         else:
-            ret = self.subjects[subject_id]
+            ret = self.subjects[id]
 
         return json.dumps(ret)
 
 
-    def update_subject(self, subject_id):
-        subject_name = request.forms.get('subject_name', None)
-        subject_height = request.forms.get('subject_height', None)
-        subject_notes = request.forms.get('subject_notes', None)
+    def update_subject(self, id):
+        subject = request.body.read()
+        try:
+            subject = json.loads(subject)
+            #[FIXME: validate]
+        except:
+            response.status = 500
+            ret = {"status": "ERROR", "body": traceback.format_exc()}
+            logging.error(traceback.format_exc())
+            return json.dumps(ret)
 
-        if not subject_id in self.subjects:
+        print id
+        print '---'
+        print subject
+        print '---'
+        print self.subjects
+        if not id in self.subjects:
             response.status = 404
             ret = {"status":"ERROR", "body":"Subject not found"}
-
         else:
-            if subject_name:
-                self.subjects[subject_id].name = subject_name
-            if subject_height:
-                self.subjects[subject_id].height = subject_height
-            if subject_notes:
-                self.subjects[subject_id].notes = subject_notes
+            self.subjects[id]['name'] = subject['name']
+            self.subjects[id]['height'] = subject['height']
+            self.subjects[id]['notes'] = subject['notes']
 
-            ret = self.subjects[subject_id]
+            ret = self.subjects[id]
 
+        print '---'
+        print ret
         return json.dumps(ret)
 
 
-    def delete_subject(self, subject_id):
-        if not subject_id in self.subjects:
+    def delete_subject(self, id):
+        if not id in self.subjects:
             response.status = 404
             ret = {"status":"ERROR", "body":"Subject not found"}
         else:
-            del self.subjects[subject_id]
+            del self.subjects[id]
             ret = {"status":"OK", "body":"Item deleted"}
 
         return json.dumps(ret)
@@ -214,30 +223,6 @@ class HttpServer(object):
     
     def parse_answer(self, answer):
         return answer
-    
-
-    def register_subject(self):
-        trial_id = request.forms.get('trial_id', TRIAL_ID)
-        subject_id = request.forms.get('subject_id', None)
-        subject_height = request.forms.get('subject_height', None)
-
-        if subject_id == None or subject_height == None:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"Bad parameters"}
-
-        elif trial_id not in self.trials:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"No such trial id"}
-
-        else:
-            self.subject = {
-                'id': subject_id,
-                'height': subject_height,
-                'server_timestamp': time.time() * 1000
-            }
-            ret = {"status": "OK", "body": "Subject registered: %s" % subject_id}
-
-        return json.dumps(ret)
 
     
     def stop_task(self):
@@ -466,7 +451,25 @@ class HttpServer(object):
         return ret
 
 
-    '''
+    def start(self):
+        logging.info("Http control server started on port %s." % self.config['http_port'])
+        bottle.run(host=self.config['http_host'], port=self.config['http_port'], server='cherrypy', debug=False, quiet=True)
+
+
+    def index(self):
+        return static_file('index.html', root=STATIC_ROOT)
+
+
+    def static(self, filepath):
+        if 'latest' in filepath:
+            response.set_header('Cache-Control', 'No-store')
+
+        return static_file(filepath, root=STATIC_ROOT)
+
+
+
+#--- scrap
+'''
     def post_register_device(self):
         # parse the input xml
         deviceIn = request.body.read()
@@ -492,18 +495,31 @@ class HttpServer(object):
 
         ret = {"status": "OK", "body": "Registered device: %s" % device["id"]}
         return json.dumps(ret)
-    '''
-
-
-    def start(self):
-        logging.info("Http control server started on port %s." % self.config['http_port'])
-        bottle.run(host=self.config['http_host'], port=self.config['http_port'], server='cherrypy', debug=False, quiet=True)
-
-
-    def index(self):
-        return static_file('index.html', root=STATIC_ROOT)
-
     
+
+    def register_subject(self):
+        trial_id = request.forms.get('trial_id', TRIAL_ID)
+        subject_id = request.forms.get('subject_id', None)
+        subject_height = request.forms.get('subject_height', None)
+
+        if subject_id == None or subject_height == None:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"Bad parameters"}
+
+        elif trial_id not in self.trials:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"No such trial id"}
+
+        else:
+            self.subject = {
+                'id': subject_id,
+                'height': subject_height,
+                'server_timestamp': time.time() * 1000
+            }
+            ret = {"status": "OK", "body": "Subject registered: %s" % subject_id}
+
+        return json.dumps(ret)
+
     def get_sensors_info(self):
         return "GET SENSORS INFO"
 
@@ -542,14 +558,27 @@ class HttpServer(object):
     
     def post_restart_task(self):
         return "POST RESTART TASK"
+'''
 
-
-    def static(self, filepath):
-        if 'latest' in filepath:
-            response.set_header('Cache-Control', 'No-store')
-
-        return static_file(filepath, root=STATIC_ROOT)
-
-
+'''
+POA
+-----
+- markers
+    O render markers in canvas
+    - make markers clickable?
+- devices
+    - make device selectable
+- subjects
+    - make subject selectable
+    - make subjects editable
+    - make subjects deleteable?
+- tasks
+    - make tasks selectable
+- answer
+    - add answer input section
+- storage
+    - write to data file
+        - csv?
+'''
 
 

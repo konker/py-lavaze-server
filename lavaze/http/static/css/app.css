@@ -9,7 +9,7 @@ cream: #efe7be
 
 
 header {
-  position: fixed;
+  //position: fixed;
   width: 100%;
   background: #bbb;
   //box-shadow: 0 4px 3px #ccc;
@@ -33,7 +33,7 @@ header {
       }
 
 body {
-  background: #eee;
+  background: #aaa;
   padding: 0;
   }
 
@@ -42,17 +42,96 @@ body {
     display: none;
     }
 #container {
-   padding-top: 6em;
+   padding-top: 0em;
    }
 #templates { display: none; }
 
 
-#mapCanvas {
-    width: 450px;
-    height: 400px;
-    border: 1px dashed #ccc;
+#devices {
+    //background: #f00;
+    }
+    #devices .panel-inner {
+        height: 120px;
+        overflow-y: scroll;
+        }
+#subjects {
+    //background: #0f0;
+    }
+    #subjects .panel-inner {
+        height: 120px;
+        overflow-y: scroll;
+        }
+        #subject-form {
+            display: none;
+            padding: 8px 16px;
+            }
+            #subject-form legend {
+                font-size: 100%;
+                font-weight: bold;
+                border-top: 1px dotted #ccc;
+                }
+#tasks {
+    //background: #00f;
+    }
+    #tasks .panel-inner {
+        height: 400px;
+        overflow-y: scroll;
+        }
+#markers {
+    //background: #ff0;
+    }
+    #marker-map {
+        width: 200px;
+        height: 400px;
+        text-align: center;
+        margin: 0 auto;
+        }
+
+.panel {
+    background: #fff;
+    //border: 1px solid #ccc;
+    //border-radius: 8px;
+    margin-bottom: 1.0em;
+    }
+    .panel h2 {
+        position: relative;
+        font-family: Lato, Verdana, sans-serif;
+        font-size: 85%;
+        font-weight: bold;
+        background: #ffc;
+        margin: 0;
+        line-height: 2.0;
+        padding: 0;
+        padding: 6px 8px;
+        }
+    .panel ul {
+        margin: 0;
+        padding: 0;
+        }
+    .panel li:nth-child(even) {
+        background: #ddd;
+        }
+    .panel li .item-inner {
+        padding: 6px 12px;
+        }
+    .panel .tools button {
+        margin-left: 4px;
+        }
+
+    tr.selected td {
+        background: #ccf !important;
     }
 
+.panel h2 input[type='file'] {
+    position: absolute;
+    opacity: 0.0;
+    z-index: 2;
+    right: 0;
+    background: #f00;
+    width: 100px;
+    }
+
+/*
 section {
   margin: 0 0 1.5em 0;
   border-radius: 6px;
@@ -87,7 +166,7 @@ section {
   background: #fff;
   }
 #logRefresh { display: block; }
-
+*/
 footer {
   background: #ddd;
   padding: 1.0em;
@@ -97,6 +176,6 @@ footer {
   
 h2 .btn-small i.icon-white {
     vertical-align: middle !important;
-}
+    }
 
 

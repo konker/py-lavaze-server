@@ -2,127 +2,183 @@
 <!--[if lt IE 7 ]> <html lang="en" class="ie6"> <![endif]--> <!--[if IE 7 ]>    <html lang="en" class="ie7"> <![endif]--> <!--[if IE 8 ]>    <html lang="en" class="ie8"> <![endif]--> <!--[if IE 9 ]>    <html lang="en" class="ie9"> <![endif]-->
 <!--[if (gt IE 9)|!(IE)]><!--> <html lang="en"> <!--<![endif]-->
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-  <title>Lavaze Server [FIXME: title]</title>
-  <meta name="description" content="">
-  <meta name="author" content="Konrad Markus, HIIT">
+<title>Field Test Control [FIXME: title]</title>
+<meta name="description" content="">
+<meta name="author" content="Konrad Markus, HIIT">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="shortcut icon" href="/favicon.ico">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <!--
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<!--
+<link rel="stylesheet" href="/static/css/bootstrap-responsive.min.css?v=2">
   -->
-  <link rel="stylesheet" href="/static/css/bootstrap.min.css?v=2">
-  <!--
-  <link rel="stylesheet" href="/static/css/app.css?v=2">
+<link rel="stylesheet" href="/static/css/bootstrap.min.css?v=2">
+<link rel="stylesheet" href="/static/css/app.css?v=2">
+<!--
   <link href='http://fonts.googleapis.com/css?family=Lato:300,400' rel='stylesheet' type='text/css'>
   -->
 
-  <!--[if lt IE 9]>
+<!--[if lt IE 9]>
   <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
   <![endif]-->
 </head>
 <body>
-  <header class="navbar" id="header">
+<header class="navbar" id="header">
     <div class="navbar-inner">
-      <h1>Lavaze Server</h1>
+        <h1>Field Test Control</h1>
     </div>
-  </header>
-  <div class="container" id="app">
-    <h2>Devices</h2>
-    <button type="button" id="device-list-refresh" class="btn btn-small btn-warning refresh"><i class="icon-refresh icon-white"></i> refresh</button>
-    <ul id="device-list"></ul>
-    <hr/>
-    <h2>Subject</h2>
-    <ul id="subject-list"></ul>
+</header>
+<div class="container" id="app">
+    <div id="panel-container" class="row">
+        <section id="devices" class="panel span6">
+            <h2 class="clearfix">Devices
+                <button type="button" id="device-list-refresh" class="btn btn-mini btn-warning pull-right"><i class="icon-refresh icon-white"></i> refresh</button>
+            </h2>
+            <div class="panel-inner">
+                <table id="device-list" class="table table-striped table-condensed table-bordered">
+                    <thead>
+                        <tr>
+                            <th>id</th>
+                            <th>type</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
 
-    <div id="new-subject">
-      <h3>New subject</h3>
-      <label for="subject-id">subject id</label>
-      <input type="text" name="subject-name" id="subject-name" placeholder="Subject name"/>
-      <label for="subject-height">subject height</label>
-      <input type="text" name="subject-height" id="subject-height" placeholder="Subject height"/>
-      <label for="subject-notes">subject notes</label>
-      <textarea name="subject-notes" id="subject-notes"></textarea>
+        <section id="subjects" class="panel span6">
+            <h2 class="clearfix">Subjects
+                <button type="button" id="subject-list-new" class="btn btn-mini btn-primary pull-right"><i class="icon-plus-sign icon-white"></i> new</button>
+            </h2>
+            <div class="panel-inner">
+                <table id="subject-list" class="table table-striped table-condensed table-bordered">
+                    <thead>
+                        <tr>
+                            <th>name</th>
+                            <th>height</th>
+                            <th>notes</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
 
-      <button type="button" id="subject-save" class="btn btn-small"><i class="icon-refresh icon-white"></i> save</button>
+            <div id="subject-form">
+                <form>
+                    <fieldset>
+                        <legend>Subject</legend>
+                        <input type="hidden" name="id" id="subject-id" disabled="disabled"/>
+                        <label for="subject-name">Name</label>
+                        <input type="text" name="subject-name" id="subject-name" placeholder="Subject name"/>
+                        <label for="subject-height">Height</label>
+                        <input type="text" name="subject-height" id="subject-height" placeholder="Subject height"/>
+                        <label for="subject-notes">Notes</label>
+                        <textarea name="subject-notes" id="subject-notes"></textarea>
+                        <p>
+                            <button type="button" id="subject-save" class="btn btn-primary btn-small"><i class="icon-ok-sign icon-white"></i> save</button>
+                        </p>
+                    </fieldset>
+                </form>
+            </div>
+        </section>
     </div>
-    <hr/>
-    <h2>Markers</h2>
-    <div id="markers-upload">
-      <input type="file" name="markers-spec" id="markers-spec" />
-      <div class="upload-details"></div>
-      <div class="upload-response"></div>
+
+    <div id="answers-container" class="row">
+        <section id="answers" class="panel span12">
+            <h2 class="clearfix">Answers</h2>
+            ANSWERS HERE
+        </section>
     </div>
-    <ul id="marker-list"></ul>
-    <p>MARKER MAP HERE</p>
-    <hr/>
-    <h2>Tasks</h2>
-    <div id="tasks-upload">
-      <input type="file" name="tasks-spec" id="tasks-spec" />
-      <div class="upload-details"></div>
-      <div class="upload-response"></div>
+
+    <div id="main-container" class="row">
+        <section id="tasks" class="panel span8">
+            <h2 class="clearfix">Tasks
+                <button type="button" id="task-list-new" class="btn btn-mini btn-primary pull-right"><i class="icon-arrow-up icon-white"></i> upload</button>
+                <input type="file" name="tasks-spec" id="tasks-spec" class="pull-right"/>
+            </h2>
+            <!--
+            <div id="tasks-upload">
+                <div class="upload-details"></div>
+                <div class="upload-response"></div>
+            </div>
+            -->
+            <div class="panel-inner">
+                <table id="task-list" class="table table-striped table-condensed">
+                    <thead>
+                        <tr>
+                            <th>task id</th>
+                            <th>f2</th>
+                            <th>f6</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="markers" class="panel span4">
+            <h2 class="clearfix">Markers
+                <button type="button" id="marker-list-new" class="btn btn-mini btn-primary pull-right"><i class="icon-arrow-up icon-white"></i> upload</button>
+                <input type="file" name="markers-spec" id="markers-spec" class="pull-right" />
+            </h2>
+            <div id="markers-upload">
+                <div class="upload-details"></div>
+                <div class="upload-response"></div>
+            </div>
+            <ul id="marker-list"></ul>
+            <div id="marker-map"></div>
+        </section>
     </div>
-    <ul id="task-list"></ul>
-    <!-- main goes here -->
-    <!--
-    <div id="mapViewContainer"></div>
-    <div id="sensorsViewContainer"></div>
-    <div id="devicesViewContainer"></div>
-    <div id="logViewContainer"></div>
-    -->
-  </div>
-  <footer>
+</div>
+<footer>
     <p>
     <i class="icon-hand-right"></i> Konrad Markus/HIIT &lt;<a href="mailto:konrad.markus@hiit.fi">konrad.markus@hiit.fi</a>&gt;
     </p>
-  </footer>
+</footer>
 
-  <script type="text/template" id="subject-view-template">
-      <p class="id"><%= id %></p>
-      <p class="name"><%= name %></p>
-      <p class="height"><%= height %></p>
-      <p class="notes"><%= notes %></p>
-  </script>
+<script type="text/template" id="subject-view-template">
+    <td>
+        <label class="radio" for="subject_<%= id %>">
+            <input type="radio" name="subject" id="subject_<%= id %>" value="<%= id %>" />
+            <span class="name"><%= name %></span>
+        </label>
+    </td>
+    <td class="height"><%= height %></td>
+    <td class="notes"><%= notes %></td>
+    <td class="tools">
+        <button type="button" class="delete-subject btn btn-mini btn-danger pull-right"><i class="icon-remove-sign icon-white"></i></button>
+        <button type="button" class="edit-subject btn btn-mini btn-primary pull-right"><i class="icon-pencil icon-white"></i> edit</button>
+    </td>
+</script>
 
-  <script type="text/template" id="task-view-template">
-      <p class="id"><%= id %></p>
-  </script>
+<script type="text/template" id="task-view-template">
+    <td>
+        <label class="radio" for="<%= id %>">
+            <input type="radio" name="subject" id="<%= id %>" value="<%= id %>" />
+            <span class="id"><%= id %></span>
+        </label>
+    </td>
+    <td class="f2"><%= f2 %></td>
+    <td class="f6"><%= f6 %></td>
+</script>
 
-  <script type="text/template" id="marker-view-template">
-      <span class="id"><%= id %></span>
-      <span class="x"><%= x %></span>
-      <span class="y"><%= y %></span>
-      <span class="color"><%= color %></span>
-  </script>
+<script type="text/template" id="device-view-template">
+    <td>
+        <label class="radio" for="<%= id %>">
+            <input type="radio" name="device" id="<%= id %>" value="<%= id %>" />
+            <span class="id"><%= id %></span>
+        </label>
+    </td>
+    <td class="type"><%= type %></td>
+</script>
 
-  <script type="text/template" id="device-view-template">
-      <input type="radio" name="device" id="<%= id %>" value="<%= id %>" />
-      <label for="<%= id %>">
-        <span class="id"><%= id %>
-        <span class="type"><%= type %></span>
-      </label>
-  </script>
-
-  <script type="text/template" id="trial-view-template">
-    <section class="row" id="log">
-      <h2>
-        <i class="icon-list"></i> trial
-        <button type="button" id="trialRefresh" class="btn btn-small btn-warning refresh pull-right"><i class="icon-refresh icon-white"></i> refresh</button>
-      </h2>
-      <div class="section-body">
-
-        <pre>
-        TRIAL HERE
-        </pre>
-      </div>
-    </section>
-  </script>
-
-  <script type="text/template" id="subjectViewTemplate">
+<script type="text/template" id="log-view-template">
     <section class="row" id="log">
       <h2>
         <i class="icon-list"></i> log
@@ -134,22 +190,9 @@
         </pre>
       </div>
     </section>
-  </script>
+</script>
 
-  <script type="text/template" id="deviceListViewTemplate">
-    <section class="row" id="log">
-      <h2>
-        <i class="icon-list"></i> log
-        <button type="button" id="deviceListRefresh" class="btn btn-small btn-warning refresh pull-right"><i class="icon-refresh icon-white"></i> refresh</button>
-      </h2>
-      <div class="section-body">
-        <pre>
-        DEVICE LIST HERE
-        </pre>
-      </div>
-    </section>
-  </script>
-  <!--
+<!--
   <script type="text/template" id="mapViewTemplate">
     <section class="row" id="map">
       <div class="section-body">
@@ -161,8 +204,8 @@
   </script>
   -->
 
-  <script type="text/template" id="logViewTemplate">
-    <section class="row" id="log">
+<script type="text/template" id="logViewTemplate">
+<section class="row" id="log">
       <h2>
         <i class="icon-list"></i> log
         <button type="button" id="logRefresh" class="btn btn-small btn-warning refresh pull-right"><i class="icon-refresh icon-white"></i> refresh</button>
@@ -173,25 +216,26 @@
         </pre>
       </div>
     </section>
-  </script>
+</script>
 
-  <!-- The missing protocol means that it will match the current protocol, either http or https. If running locally, we use the local jQuery. -->
-  <!--
+<!-- The missing protocol means that it will match the current protocol, either http or https. If running locally, we use the local jQuery. -->
+<!--
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
   <script>window.jQuery || document.write('<script src="js/libs/jquery.min.js"><\/script>')</script>
   -->
-  <script src="/static/js/libs/jquery-1.9.1.js"></script>
-  <!--
+<script src="/static/js/libs/jquery-1.9.1.js"></script>
+<!--
   <script src="/static/js/libs/jquery.timeago.js"></script>
   <script src="/static/js/libs/handlebars-1.0.0-rc.3.js"></script>
   <script src="/static/js/libs/ember-1.0.0-rc.1.js"></script>
   <script src="/static/js/app.js"></script>
   -->
-  <script type="text/javascript" src="/static/js/libs/underscore.js"></script>
-  <script type="text/javascript" src="/static/js/libs/backbone.js"></script>
-  <script type="text/javascript" src="/static/js/libs/jquery.liteuploader.min.js"></script>
-  <script type="text/javascript" src="/static/js/app2.js"></script>
-  <!--
+<script type="text/javascript" src="/static/js/libs/underscore.js"></script>
+<script type="text/javascript" src="/static/js/libs/backbone.js"></script>
+<script type="text/javascript" src="/static/js/libs/jquery.liteuploader.min.js"></script>
+<script type="text/javascript" src="/static/js/libs/raphael-min.js"></script>
+<script type="text/javascript" src="/static/js/app2.js"></script>
+<!--
   <script src="//maps.google.com?file=api&amp;v=2.x&amp;key=AIzaSyCOxBsjMCBOI17kZx4kQjrVWmTWYtdS0hk" type="text/javascript"></script>
   <script src="//maps.googleapis.com/maps/api/js?sensor=false&key=AIzaSyCOxBsjMCBOI17kZx4kQjrVWmTWYtdS0hk" type="text/javascript"></script>
   -->
