@@ -92,14 +92,35 @@
     <div id="answers-container" class="row">
         <section id="answers" class="panel span12">
             <h2 class="clearfix">Answers</h2>
-            <div id="answer-form-holder">
-                <form class="form-inline">
-                    <input type="text" class="input-mini" name="distance" id="answer-distance"/>
-                    <span id="answer-actual"></span>
-                    <input type="text" class="input-mini" name="relative" id="answer-relative"/>
-                    <input type="text" class="input-mini" name="marker" id="answer-marker"/>
-                    <button type="button" id="answer-save" class="btn btn-primary btn-small"><i class="icon-ok-sign icon-white"></i> save</button>
-                </form>
+            <div id="answer-form-holder" class="row">
+                <div id="answer" class="span4">
+                    <form class="form-inline" class="span5">
+                        <input type="text" class="input-mini" name="distance" id="answer-distance"/>
+                        <span id="answer-actual"></span>
+                        <input type="text" class="input-mini" name="relative" id="answer-relative-operator"/>
+                        <input type="text" class="input-mini" name="marker" id="answer-marker"/>
+                        <button type="button" id="answer-save" class="btn btn-primary btn-small"><i class="icon-ok-sign icon-white"></i> save</button>
+                    </form>
+                    <div id="distance-display">
+                        absolute: <span class="absolute">-</span>
+                        relative: <span class="relative">-</span>
+                    </div>
+                </div>
+                <div id="timer" class="span2">
+                    <div class="time clearfix">0:00</div>
+                    <button type="button" id="timer-start" class="btn btn-success btn-mini"><i class="icon-play icon-white"></i></button>
+                    <button type="button" id="timer-reset" class="btn btn-danger btn-mini"><i class="icon-refresh icon-white"></i></button>
+                </div>
+                <div id="last-answer" class="span5">
+                    <div class="inner">
+                        <h3>Last answer</h3>
+                        <span class="actual-value">-</span>
+                        <i class="icon-arrow-right"></i>
+                        <span class="subject-value">-</span>
+                        <i class="icon-time"></i>
+                        <span class="subject-time">-:--</span>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
@@ -117,7 +138,7 @@
             </div>
             -->
             <div class="panel-inner">
-                <table id="task-list" class="table table-striped table-condensed">
+                <table id="task-list" class="table table-striped table-condensed table-bordered">
                     <thead>
                         <tr>
                             <th>task id</th>
@@ -131,7 +152,7 @@
         </section>
 
         <section id="markers" class="panel span4">
-            <h2 class="clearfix">Markers
+            <h2 class="clearfix">Configuration
                 <button type="button" id="marker-list-new" class="btn btn-mini btn-primary pull-right"><i class="icon-arrow-up icon-white"></i> upload</button>
                 <input type="file" name="markers-spec" id="markers-spec" class="pull-right" />
             </h2>

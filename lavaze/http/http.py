@@ -186,9 +186,10 @@ class HttpServer(object):
         trial_id = request.forms.get('trial_id', TRIAL_ID)
         device_id = request.forms.get('device_id', None)
         subject_id = request.forms.get('subject_id', None)
+        time_secs = request.forms.get('time_secs', None)
         answer = request.forms.get('answer', None)
 
-        if device_id == None or subject_id == None  or answer == None:
+        if device_id == None or subject_id == None  or time_secs == None or answer == None:
             response.status = 500
             ret = {"status":"ERROR", "body":"Bad parameters"}
 
@@ -221,6 +222,8 @@ class HttpServer(object):
 
     
     def parse_answer(self, answer):
+        if '<' in answer:
+            rel, marker = answer.split('<')
         return answer
 
     
@@ -435,18 +438,18 @@ class HttpServer(object):
 
     
     def get_device_response_xml(self, device_id, ret):
-        ctxEL = ret.createElement('ctxEL')
+        ctxEL = ret.createElement('ctxEl')
         start_task_id = self.devices[device_id]['start_task_id']
         stop_task_id = self.devices[device_id]['stop_task_id']
 
         if start_task_id or start_task_id:
             taskEl = ret.createElement('task')
-            taskEl.appendChild(ret.createTextNode(self.devices[device_id]['start_task_id']))
+            taskEl.appendChild(ret.createTextNode(self.devices[device_id]['start_task_id'][4:]))
             ctxEL.appendChild(taskEl)
 
-            # [FIXME: should use proper subject_id ?]
+            # [XXX: only one subject at a time]
             userHeightEl = ret.createElement('userHeight')
-            userHeightEl.appendChild(ret.createTextNode(self.subjects['0']['height']))
+            userHeightEl.appendChild(ret.createTextNode(self.subjects[SUBJECT_ID]['height']))
             ctxEL.appendChild(userHeightEl)
 
             operationEl = ret.createElement('operation')
