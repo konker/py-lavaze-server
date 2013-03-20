@@ -12,6 +12,7 @@ var app = (function() {
 
     var AppView = Backbone.View.extend({
         el: '#app',
+        _childTaskViews: null,
 
         initialize: function() {
             app.deviceList.on('add', this.addOneDevice, this);
@@ -33,7 +34,51 @@ var app = (function() {
         events: {
             'click #device-list-refresh': 'deviceListRefresh',
             'click #subject-list-new': 'showNewSubjectForm',
-            'click #subject-save': 'writeSubject'
+            'click #subject-save': 'writeSubject',
+            'click #answer-save': 'writeAnswer'
+        },
+        writeAnswer: function() {
+            var url = '/tasks/' + app.cur.task.model.get('id') + '/answer';
+            var distance = $('#answer-distance').val();
+            var relative = $('#answer-relative').val();
+            var marker = $('#answer-marker').val();
+
+            //[FIXME: validate]
+            var answer = distance + relative + marker;
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    device_id: app.cur.device.model.get('id'),
+                    subject_id: app.cur.subject.model.get('id'),
+                    answer: answer
+                },
+                success: function(data, textStatus, jqXHR) {
+                    // update last answer block
+                    //[TODO]
+
+                    // select next task
+                    var curIndex = _(app.appView._childTaskViews).indexOf(app.cur.task);
+                    console.log(curIndex);
+                    if (curIndex != -1) {
+                        curIndex = curIndex + 1;
+                        if (curIndex < (app.appView._childTaskViews.length - 1)) {
+                            // get the next task view
+                            app.appView.selectTask(app.appView._childTaskViews[curIndex]);
+                        }
+                        else {
+                            alert('Tasks finished');
+                        }
+                    }
+                    else {
+                        alert('indexOf failed');
+                    }
+
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    alert(errorThrown);
+                }
+            });
         },
         selectDevice: function(view) {
             if (app.cur.device) {
@@ -60,6 +105,11 @@ var app = (function() {
             else {
                 app.cur.task = view;
                 app.cur.task.select();
+                view.$('input').prop('checked', true);
+                $('#answer-actual').html(view.model.get('f6') + 'm');
+                $('#answer-relative').val('');
+                $('#answer-marker').val('');
+                $('#answer-distance').val('').focus();
             }
         },
         deleteSubject: function(view) {
@@ -69,10 +119,9 @@ var app = (function() {
             }
         },
         showEditSubjectForm: function(view) {
-            app.appView.cur.subjectView = view;
-            app.appView.cur.subjectModel = view.model;
+            app.cur.subject = view;
 
-            var f = this.$('#subject-form');
+            var f = this.$('#subject-form-holder');
             f.find('#subject-id').prop('disabled', false).val(view.model.get('id'));
             f.find('#subject-name').val(view.model.get('name'));
             f.find('#subject-height').val(view.model.get('height'));
@@ -81,7 +130,7 @@ var app = (function() {
             f.show();
         },
         showNewSubjectForm: function() {
-            var f = this.$('#subject-form');
+            var f = this.$('#subject-form-holder');
             f.find('#subject-id').val(-1).prop('disabled', true);
             f.find('legend').html('New subject');
             f.show();
@@ -103,9 +152,11 @@ var app = (function() {
         },
         addOneTask: function(item) {
             var view = new TaskView({model: item});
+            this._childTaskViews.push(view);
             $('#task-list tbody').append(view.render().el);
         },
         addAllTasks: function() {
+            this._childTaskViews = [];
             this.$('#task-list tbody').empty();
             app.taskList.each(this.addOneTask, this);
         },
@@ -138,9 +189,10 @@ var app = (function() {
                 subject.save();
             }
             else {
-                app.subjectList.create(subjectAttrs);
+                //[XXX: only one subject at a time]
+                app.subjectList.reset().create(subjectAttrs);
             }
-            this.$('#subject-form').hide();
+            this.$('#subject-form-holder').hide();
             //[TODO: select newly added subject in list]
         },
         deviceListRefresh: function() {

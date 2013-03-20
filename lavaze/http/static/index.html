@@ -69,7 +69,7 @@
                 </table>
             </div>
 
-            <div id="subject-form">
+            <div id="subject-form-holder">
                 <form>
                     <fieldset>
                         <legend>Subject</legend>
@@ -92,7 +92,15 @@
     <div id="answers-container" class="row">
         <section id="answers" class="panel span12">
             <h2 class="clearfix">Answers</h2>
-            ANSWERS HERE
+            <div id="answer-form-holder">
+                <form class="form-inline">
+                    <input type="text" class="input-mini" name="distance" id="answer-distance"/>
+                    <span id="answer-actual"></span>
+                    <input type="text" class="input-mini" name="relative" id="answer-relative"/>
+                    <input type="text" class="input-mini" name="marker" id="answer-marker"/>
+                    <button type="button" id="answer-save" class="btn btn-primary btn-small"><i class="icon-ok-sign icon-white"></i> save</button>
+                </form>
+            </div>
         </section>
     </div>
 
@@ -160,7 +168,7 @@
 <script type="text/template" id="task-view-template">
     <td>
         <label class="radio" for="<%= id %>">
-            <input type="radio" name="subject" id="<%= id %>" value="<%= id %>" />
+            <input type="radio" name="task" id="<%= id %>" value="<%= id %>" />
             <span class="id"><%= id %></span>
         </label>
     </td>

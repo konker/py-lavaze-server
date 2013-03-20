@@ -23,6 +23,7 @@ bottle.TEMPLATE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 
 STATIC_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), 'static'))
 COMMENT_CHAR = '#'
 TRIAL_ID = 'TRIAL0'
+SUBJECT_ID = 'SUBJECT0'
 
 
 #[TODO: move to own module]
@@ -30,8 +31,8 @@ class Trial:
     def __init__(self, tasks):
         self.tasks = tasks
         self.markers = []
-        self.start_task_id = None
-        self.stop_task_id = None
+        #self.start_task_id = None
+        #self.stop_task_id = None
         self.index = {}
         for t in range(len(self.tasks)):
             self.index[tasks[t]['id']] = t
@@ -122,7 +123,8 @@ class HttpServer(object):
             ret = {"status":"ERROR", "body":"Bad parameters"}
 
         else:
-            subject_id = str(len(self.subjects))
+            #[XXX: only one subject at a time]
+            subject_id = SUBJECT_ID
             subject = {
                 'id': subject_id,
                 'name': subject['name'],
@@ -156,11 +158,6 @@ class HttpServer(object):
             logging.error(traceback.format_exc())
             return json.dumps(ret)
 
-        print id
-        print '---'
-        print subject
-        print '---'
-        print self.subjects
         if not id in self.subjects:
             response.status = 404
             ret = {"status":"ERROR", "body":"Subject not found"}
@@ -171,8 +168,6 @@ class HttpServer(object):
 
             ret = self.subjects[id]
 
-        print '---'
-        print ret
         return json.dumps(ret)
 
 
@@ -187,13 +182,13 @@ class HttpServer(object):
         return json.dumps(ret)
 
     
-    def task_answer(self):
+    def task_answer(self, id):
         trial_id = request.forms.get('trial_id', TRIAL_ID)
         device_id = request.forms.get('device_id', None)
-        task_id = request.forms.get('task_id', None)
+        subject_id = request.forms.get('subject_id', None)
         answer = request.forms.get('answer', None)
 
-        if device_id == None or task_id == None or answer == None:
+        if device_id == None or subject_id == None  or answer == None:
             response.status = 500
             ret = {"status":"ERROR", "body":"Bad parameters"}
 
@@ -205,6 +200,10 @@ class HttpServer(object):
             response.status = 500
             ret = {"status":"ERROR", "body":"No such device id"}
 
+        elif not subject_id in self.subjects:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"No such subject id"}
+
         else:
             #[TODO: parse answer]
             answer = self.parse_answer(answer)
@@ -213,10 +212,10 @@ class HttpServer(object):
             print answer
 
             # Automatically go to next task
-            self.devices[device_id].start_task_id = self.trials[trial_id].next_task_id(task_id)
-            self.devices[device_id].stop_task_id = None
+            self.devices[device_id]['start_task_id'] = self.trials[trial_id].next_task_id(id)
+            self.devices[device_id]['stop_task_id'] = None
 
-            ret = {"status": "OK", "body": "Task %s answered" % task_id}
+            ret = {"status": "OK", "body": "Task %s answered" % id}
 
         return json.dumps(ret)
 
@@ -247,8 +246,8 @@ class HttpServer(object):
             ret = {"status":"ERROR", "body":"No such task id"}
 
         else:
-            self.devices[device_id].start_task_id = None
-            self.devices[device_id].stop_task_id = task_id
+            self.devices[device_id]['start_task_id'] = None
+            self.devices[device_id]['stop_task_id'] = task_id
             ret = {"status": "OK", "body": "Stopped task %s" % task_id}
 
         return json.dumps(ret)
@@ -276,8 +275,8 @@ class HttpServer(object):
             ret = {"status":"ERROR", "body":"No such task id"}
 
         else:
-            self.devices[device_id].start_task_id = task_id
-            self.devices[device_id].stop_task_id = None
+            self.devices[device_id]['start_task_id'] = task_id
+            self.devices[device_id]['stop_task_id'] = None
             ret = {"status": "OK", "body": "Stopped task %s" % task_id}
 
         return json.dumps(ret)
@@ -431,6 +430,7 @@ class HttpServer(object):
 
         #[FIXME: proper output]
         ret = self.get_device_response_xml(device_id, ret)
+        print ret.toxml()
         return ret.toxml()
 
     
@@ -440,12 +440,25 @@ class HttpServer(object):
         stop_task_id = self.devices[device_id]['stop_task_id']
 
         if start_task_id or start_task_id:
-            ctxEL.appendChild(ret.createElement('task').appendChild(ret.createTextNode(self.devices[device_id]['start_task_id'])))
-            ctxEL.appendChild(ret.createElement('userHeight').appendChild(ret.createTextNode(self.subject['height'])))
+            taskEl = ret.createElement('task')
+            taskEl.appendChild(ret.createTextNode(self.devices[device_id]['start_task_id']))
+            ctxEL.appendChild(taskEl)
+
+            # [FIXME: should use proper subject_id ?]
+            userHeightEl = ret.createElement('userHeight')
+            userHeightEl.appendChild(ret.createTextNode(self.subjects['0']['height']))
+            ctxEL.appendChild(userHeightEl)
+
+            operationEl = ret.createElement('operation')
             if start_task_id:
-                ctxEL.appendChild(ret.createElement('operation').appendChild(ret.createTextNode('start')))
+                operationEl.appendChild(ret.createTextNode('start'))
+                self.devices[device_id]['start_task_id'] = None
             else:
-                ctxEL.appendChild(ret.createElement('operation').appendChild(ret.createTextNode('stop')))
+                operationEl.appendChild(ret.createTextNode('stop'))
+                self.devices[device_id]['stop_task_id'] = None
+
+            ctxEL.appendChild(operationEl)
+
 
         ret.documentElement.appendChild(ctxEL)
         return ret

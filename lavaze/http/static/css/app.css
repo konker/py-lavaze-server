@@ -61,15 +61,39 @@ body {
         height: 120px;
         overflow-y: scroll;
         }
-        #subject-form {
+        #subject-form-holder {
             display: none;
             padding: 8px 16px;
             }
-            #subject-form legend {
+            #subject-form-holder legend {
                 font-size: 100%;
                 font-weight: bold;
                 border-top: 1px dotted #ccc;
                 }
+#answers {
+    }
+    #answer-form-holder {
+        padding: 16px;
+        }
+    #answer-distance {
+        width: 2.0em;
+        }
+    #answer-actual {
+        display: inline-block;
+        min-width: 4.0em;
+        }
+    #answer-relative {
+        width: 1.0em;
+        margin-left: 1.0em;
+        }
+    #answer-marker {
+        width: 2.0em;
+        margin-left: 1.0em;
+        }
+    #answer-save {
+        margin-left: 1.0em;
+        }
+
 #tasks {
     //background: #00f;
     }
@@ -119,8 +143,8 @@ body {
         }
 
     tr.selected td {
-        background: #ccf !important;
-    }
+        background: #9cf !important;
+        }
 
 .panel h2 input[type='file'] {
     position: absolute;
