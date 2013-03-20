@@ -116,7 +116,7 @@ var app = (function() {
 
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-                    alert(errorThrown);
+                    alert(textStatus + ' ' + errorThrown);
                 }
             });
         },
@@ -148,18 +148,30 @@ var app = (function() {
                 return false;
             }
             else {
-                app.cur.task = view;
-                app.cur.task.select();
-                view.$('input').prop('checked', true);
-                $('#distance-display .absolute').html(view.model.get('f6'));
-                $('#distance-display .relative').html('-');
+                $.ajax({
+                    url: '/tasks/' + view.model.get('id') + '/start',
+                    method: 'POST',
+                    data: {
+                        device_id: app.cur.device.model.get('id')
+                    },
+                    success: function(data, textStatus, jqXHR) {
+                        app.cur.task = view;
+                        app.cur.task.select();
+                        view.$('input').prop('checked', true);
+                        $('#distance-display .absolute').html(view.model.get('f6'));
+                        $('#distance-display .relative').html('-');
 
-                $('#answer-relative-operator').val('');
-                $('#answer-marker').val('');
-                $('#answer-distance').val('').focus();
+                        $('#answer-relative-operator').val('');
+                        $('#answer-marker').val('');
+                        $('#answer-distance').val('').focus();
 
-                app.appView.resetTimer();
-                app.appView.toggleTimer();
+                        app.appView.resetTimer();
+                        app.appView.toggleTimer();
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        alert(textStatus + ' ' + errorThrown);
+                    }
+                });
             }
         },
         deleteSubject: function(view) {

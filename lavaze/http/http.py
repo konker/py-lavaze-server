@@ -213,8 +213,8 @@ class HttpServer(object):
             print answer
 
             # Automatically go to next task
-            self.devices[device_id]['start_task_id'] = self.trials[trial_id].next_task_id(id)
-            self.devices[device_id]['stop_task_id'] = None
+            #self.devices[device_id]['start_task_id'] = self.trials[trial_id].next_task_id(id)
+            #self.devices[device_id]['stop_task_id'] = None
 
             ret = {"status": "OK", "body": "Task %s answered" % id}
 
@@ -227,12 +227,11 @@ class HttpServer(object):
         return answer
 
     
-    def stop_task(self):
+    def stop_task(self, id):
         trial_id = request.forms.get('trial_id', TRIAL_ID)
         device_id = request.forms.get('device_id', None)
-        task_id = request.forms.get('task_id', None)
 
-        if device_id == None or task_id == None:
+        if device_id == None or id == None:
             response.status = 500
             ret = {"status":"ERROR", "body":"Bad parameters"}
 
@@ -244,24 +243,23 @@ class HttpServer(object):
             response.status = 500
             ret = {"status":"ERROR", "body":"No such device id"}
 
-        elif not task_id in self.trials[trial_id].index:
+        elif not id in self.trials[trial_id].index:
             response.status = 500
             ret = {"status":"ERROR", "body":"No such task id"}
 
         else:
             self.devices[device_id]['start_task_id'] = None
-            self.devices[device_id]['stop_task_id'] = task_id
-            ret = {"status": "OK", "body": "Stopped task %s" % task_id}
+            self.devices[device_id]['stop_task_id'] = id
+            ret = {"status": "OK", "body": "Stopped task %s" % id}
 
         return json.dumps(ret)
 
     
-    def start_task(self):
+    def start_task(self, id):
         trial_id = request.forms.get('trial_id', TRIAL_ID)
         device_id = request.forms.get('device_id', None)
-        task_id = request.forms.get('task_id', None)
 
-        if device_id == None or task_id == None:
+        if device_id == None or id == None:
             response.status = 500
             ret = {"status":"ERROR", "body":"Bad parameters"}
 
@@ -273,14 +271,14 @@ class HttpServer(object):
             response.status = 500
             ret = {"status":"ERROR", "body":"No such device id"}
 
-        elif not task_id in self.trials[trial_id].index:
+        elif not id in self.trials[trial_id].index:
             response.status = 500
             ret = {"status":"ERROR", "body":"No such task id"}
 
         else:
-            self.devices[device_id]['start_task_id'] = task_id
+            self.devices[device_id]['start_task_id'] = id
             self.devices[device_id]['stop_task_id'] = None
-            ret = {"status": "OK", "body": "Stopped task %s" % task_id}
+            ret = {"status": "OK", "body": "Stopped task %s" % id}
 
         return json.dumps(ret)
 
