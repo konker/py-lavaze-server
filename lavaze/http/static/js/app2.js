@@ -198,6 +198,13 @@ var app = (function() {
         },
         addAllMarkers: function() {
             app.paper.clear();
+            var x = app.markerList.translateX(0);
+            var y = app.markerList.translateY(0);
+            this.element = app.paper.circle(x, y, 1.5*MARKER_MAP_NODE_RADIUS);
+            this.element.attr({
+                fill: '#00f',
+                stroke: '#aaa'
+            });
             app.markerList.each(this.addOneMarker, this);
         },
         addOneTask: function(item) {
@@ -355,8 +362,8 @@ var app = (function() {
 
     var MarkerView = Backbone.View.extend({
         initialize: function() {
-            var x = this.translateX(this.model.get('x'));
-            var y = this.translateY(this.model.get('y'));
+            var x = app.markerList.translateX(this.model.get('x'));
+            var y = app.markerList.translateY(this.model.get('y'));
             this.element = app.paper.circle(x, y, MARKER_MAP_NODE_RADIUS);
             this.element.attr({
                 fill: this.model.get('color'),
@@ -376,9 +383,12 @@ var app = (function() {
 
             //var lael = app.paper.print(x, y, this.model.get('id'), app.paper.getFont("Museo"), 12).attr({fill: "#00f"});
             //app.paper.add(label);
+        }
+    });
 
-
-        },
+    var MarkerList = Backbone.Collection.extend({
+        model: Marker,
+        url: '/markers',
         translateX: function(x) {
             var ppm = (MARKER_MAP_WIDTH / MARKER_PHYSICAL_WIDTH);
             return (parseFloat(x) + (MARKER_PHYSICAL_WIDTH / 2)) * ppm;
@@ -387,11 +397,6 @@ var app = (function() {
             var ppm = (MARKER_MAP_HEIGHT / MARKER_PHYSICAL_HEIGHT);
             return (MARKER_PHYSICAL_HEIGHT - parseFloat(y)) * ppm;
         }
-    });
-
-    var MarkerList = Backbone.Collection.extend({
-        model: Marker,
-        url: '/markers',
     });
 
     var Device = Backbone.Model.extend({
