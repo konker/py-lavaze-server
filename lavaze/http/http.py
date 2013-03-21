@@ -18,33 +18,18 @@ import requests
 import bottle
 from bottle import template, static_file, request, response
 from xml.dom import minidom
+from storage.csv_storage import Storage
+from lavaze.trial import Trial
+
 
 bottle.TEMPLATE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'views')),
 STATIC_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), 'static'))
+DATA_FILE = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'results.csv'))
 COMMENT_CHAR = '#'
 TRIAL_ID = 'TRIAL0'
 SUBJECT_ID = 'SUBJECT0'
-
-
-#[TODO: move to own module]
-class Trial:
-    def __init__(self, tasks):
-        self.tasks = tasks
-        self.markers = []
-        #self.start_task_id = None
-        #self.stop_task_id = None
-        self.index = {}
-        for t in range(len(self.tasks)):
-            self.index[tasks[t]['id']] = t
-
-
-    def next_task_id(self, task_id):
-        task_index = self.index.get(task_id, -1)
-        if not task_index == -1:
-            if task_index < len(self.tasks):
-                return self.tasks[task_index + 1]['id']
-
-        return None
+STORAGE_HEADERS = ['timestamp', 'trial_id', 'device_id', 'subject_id', 'subject_height',
+                   'task_id', 'answer_abs', 'answer_raw', 'time_secs']
 
 
 class HttpServer(object):
@@ -52,37 +37,16 @@ class HttpServer(object):
         self.config = config
         self.devices = {}
         self.subjects = {}
-        self.trials = {}
-        self.subject = None
+        self.trials = {
+            TRIAL_ID: Trial()
+        }
+
+        self.storage = Storage(DATA_FILE, STORAGE_HEADERS)
 
         # set up the routes manually
         bottle.route('/static/<filepath:path>', method='GET')(self.static)
         bottle.route('/', method='GET')(self.index)
 
-        '''
-        bottle.route('/GetSensorsInfo', method='GET')(self.get_sensors_info)
-        # deprecated?
-        bottle.route('/GetMaps', method='GET')(self.get_maps)
-        # deprecated?
-        bottle.route('/GetJS', method='GET')(self.get_js)
-        bottle.route('/Log', method='GET')(self.get_log)
-        bottle.route('/GetDevicesInfo', method='GET')(self.get_devices_info)
-        bottle.route('/DevDebInfo', method='GET')(self.get_devices_debug_info)
-        bottle.route('/TaskInfo', method='GET')(self.get_task_info)
-        bottle.route('/InitTask', method='POST')(self.post_init_task)
-        bottle.route('/StartTask', method='POST')(self.post_start_task)
-        bottle.route('/StopTask', method='POST')(self.post_stop_task)
-        bottle.route('/RestartTask', method='POST')(self.post_restart_task)
-        #bottle.route('/RegisterDevice.json', method='POST')(self.post_register_device)
-        #bottle.route('/NextTask.json', method='POST')(self.post_next_task)
-        #bottle.route('/PreviousTask.json', method='POST')(self.post_prev_task)
-
-        #bottle.route('/RegisterTasks.json', method='POST')(self.post_register_tasks)
-        #bottle.route('/RegisterMarkers.json', method='POST')(self.post_register_markers)
-        #bottle.route('/RegisterSubject.json', method='POST')(self.post_register_subject)
-        '''
-
-        # new routes
         bottle.route('/devices', method='GET')(self.get_devices)
         bottle.route('/devices', method='POST')(self.register_device_xml)
 
@@ -186,10 +150,11 @@ class HttpServer(object):
         trial_id = request.forms.get('trial_id', TRIAL_ID)
         device_id = request.forms.get('device_id', None)
         subject_id = request.forms.get('subject_id', None)
+        timestamp = request.forms.get('timestamp', None)
         time_secs = request.forms.get('time_secs', None)
         answer = request.forms.get('answer', None)
 
-        if device_id == None or subject_id == None  or time_secs == None or answer == None:
+        if device_id == None or subject_id == None or time_secs == None or timestamp == None or answer == None:
             response.status = 500
             ret = {"status":"ERROR", "body":"Bad parameters"}
 
@@ -207,24 +172,43 @@ class HttpServer(object):
 
         else:
             #[TODO: parse answer]
-            answer = self.parse_answer(answer)
+            answer_abs, answer_raw = self.parse_answer(trial_id, answer)
 
-            #[TODO: write answer to data]
-            print answer
-
-            # Automatically go to next task
-            #self.devices[device_id]['start_task_id'] = self.trials[trial_id].next_task_id(id)
-            #self.devices[device_id]['stop_task_id'] = None
+            # write answer to data file
+            record = [timestamp, trial_id, device_id, self.subjects[subject_id]['name'], self.subjects[subject_id]['height'],
+                      id, answer_abs, answer_raw, time_secs] 
+            self.storage.write_array(record)
+            logging.info("Wrote record: %s" % record)
 
             ret = {"status": "OK", "body": "Task %s answered" % id}
 
         return json.dumps(ret)
 
     
-    def parse_answer(self, answer):
+    def parse_answer(self, trial_id, answer):
+        abs = -1
         if '<' in answer:
             rel, marker = answer.split('<')
-        return answer
+            marker = int(marker) - 1
+            if marker > -1 and marker < len(self.trials[trial_id].markers):
+                print marker
+                print self.trials[trial_id].markers
+                y = self.trials[trial_id].markers[marker]['y']
+                abs = y - float(rel)
+
+        elif '>' in answer:
+            rel, marker = answer.split('>')
+            marker = int(marker) - 1
+            if marker > -1 and marker < len(self.trials[trial_id].markers):
+                print marker
+                print self.trials[trial_id].markers
+                y = self.trials[trial_id].markers[marker]['y']
+                abs = y + float(rel)
+
+        else:
+            abs = answer
+
+        return abs, answer
 
     
     def stop_task(self, id):
@@ -332,8 +316,8 @@ class HttpServer(object):
                         fields = re.split('\s+', l)
                         marker = {
                             'id': fields[0],
-                            'x': fields[1],
-                            'y': fields[2],
+                            'x': float(fields[1]),
+                            'y': float(fields[2]),
                             'color': fields[3]
                         }
                         markers.append(marker)
@@ -389,7 +373,7 @@ class HttpServer(object):
 
         # NOTE: currently there is only 1 trial.
         # Re-uploading overwrites existing one, if any.
-        self.trials[TRIAL_ID] = Trial(tasks)
+        self.trials[TRIAL_ID].set_tasks(tasks)
 
         ret = {"status": "OK", "body": "Registered trial with %s tasks" % len(tasks)}
         return json.dumps(ret)
@@ -479,120 +463,4 @@ class HttpServer(object):
             response.set_header('Cache-Control', 'No-store')
 
         return static_file(filepath, root=STATIC_ROOT)
-
-
-
-#--- scrap
-'''
-    def post_register_device(self):
-        # parse the input xml
-        deviceIn = request.body.read()
-        try:
-            deviceIn = minidom.parse(device)
-
-            device_id = deviceIn.attributes["device"].value
-            device_type = deviceIn.attributes["type"].value
-
-            device = {
-                "id": device_id,
-                "type": device_type,
-                "server_timestamp": time.time() * 1000
-            }
-            
-
-            self.devices[device_id] = device
-            logging.info("Registered device: %s", device["id"])
-        except:
-            ret = {"status": "ERROR", "body": traceback.format_exc()}
-            logging.error(traceback.format_exc())
-            return json.dumps(ret)
-
-        ret = {"status": "OK", "body": "Registered device: %s" % device["id"]}
-        return json.dumps(ret)
-    
-
-    def register_subject(self):
-        trial_id = request.forms.get('trial_id', TRIAL_ID)
-        subject_id = request.forms.get('subject_id', None)
-        subject_height = request.forms.get('subject_height', None)
-
-        if subject_id == None or subject_height == None:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"Bad parameters"}
-
-        elif trial_id not in self.trials:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"No such trial id"}
-
-        else:
-            self.subject = {
-                'id': subject_id,
-                'height': subject_height,
-                'server_timestamp': time.time() * 1000
-            }
-            ret = {"status": "OK", "body": "Subject registered: %s" % subject_id}
-
-        return json.dumps(ret)
-
-    def get_sensors_info(self):
-        return "GET SENSORS INFO"
-
-    
-    def get_maps(self):
-        return "GET MAPS"
-
-    
-    def get_js(self):
-        return "GET JS"
-
-    
-    def get_log(self):
-        return "GET LOG"
-
-    
-    def get_devices_info(self):
-        return "GET DEVICES INFO"
-
-    
-    def post_init_task(self):
-        return "POST INIT TASK"
-
-    
-    def get_devices_debug_info(self):
-        return "GET DEV DEB INFO"
-
-    
-    def get_task_info(self):
-        return "GET TASK INFO"
-
-    
-    def post_stop_task(self):
-        return "POST STOP TASK"
-
-    
-    def post_restart_task(self):
-        return "POST RESTART TASK"
-'''
-
-'''
-POA
------
-- markers
-    O render markers in canvas
-    - make markers clickable?
-- devices
-    - make device selectable
-- subjects
-    - make subject selectable
-    - make subjects editable
-    - make subjects deleteable?
-- tasks
-    - make tasks selectable
-- answer
-    - add answer input section
-- storage
-    - write to data file
-        - csv?
-'''
-
 

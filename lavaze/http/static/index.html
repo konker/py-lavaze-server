@@ -40,6 +40,7 @@
                 <div id="answer" class="span4">
                     <form class="form-inline" class="span5">
                         <input type="text" class="input-mini" name="distance" id="answer-distance"/>
+                        <span id="task-id"></span>: 
                         <span id="answer-actual"></span>
                         <input type="text" class="input-mini" name="relative" id="answer-relative-operator"/>
                         <input type="text" class="input-mini" name="marker" id="answer-marker"/>
@@ -120,6 +121,7 @@
                         <tr>
                             <th>id</th>
                             <th>type</th>
+                            <th>timestamp</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -135,9 +137,11 @@
                 <table id="subject-list" class="table table-striped table-condensed table-bordered">
                     <thead>
                         <tr>
-                            <th>name</th>
+                            <th>id</th>
                             <th>height</th>
+                            <!--
                             <th>notes</th>
+                            -->
                             <th></th>
                         </tr>
                     </thead>
@@ -150,14 +154,17 @@
                     <fieldset>
                         <legend>Subject</legend>
                         <input type="hidden" name="id" id="subject-id" disabled="disabled"/>
-                        <label for="subject-name">Name</label>
-                        <input type="text" name="subject-name" id="subject-name" placeholder="Subject name"/>
+                        <label for="subject-name">Id</label>
+                        <input type="text" name="subject-name" id="subject-name" placeholder="Subject id"/>
                         <label for="subject-height">Height</label>
                         <input type="text" name="subject-height" id="subject-height" placeholder="Subject height"/>
+                        <!--
                         <label for="subject-notes">Notes</label>
                         <textarea name="subject-notes" id="subject-notes"></textarea>
+                        -->
                         <p>
                             <button type="button" id="subject-save" class="btn btn-primary btn-small"><i class="icon-ok-sign icon-white"></i> save</button>
+                            <button type="button" id="subject-cancel" class="btn btn-warning btn-small"><i class="icon-remove-sign icon-white"></i> cancel</button>
                         </p>
                     </fieldset>
                 </form>
@@ -179,7 +186,9 @@
         </label>
     </td>
     <td class="height"><%= height %></td>
+    <!--
     <td class="notes"><%= notes %></td>
+    -->
     <td class="tools">
         <button type="button" class="delete-subject btn btn-mini btn-danger pull-right"><i class="icon-remove-sign icon-white"></i></button>
         <button type="button" class="edit-subject btn btn-mini btn-primary pull-right"><i class="icon-pencil icon-white"></i> edit</button>
@@ -205,6 +214,7 @@
         </label>
     </td>
     <td class="type"><%= type %></td>
+    <td class="server_timestamp"><%= app.util.format_timestamp(server_timestamp) %></td>
 </script>
 
 <script type="text/template" id="log-view-template">

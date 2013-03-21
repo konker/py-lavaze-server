@@ -38,6 +38,7 @@ var app = (function() {
             'click #device-list-refresh': 'deviceListRefresh',
             'click #subject-list-new': 'showNewSubjectForm',
             'click #subject-save': 'writeSubject',
+            'click #subject-cancel': 'cancelSubjectForm',
             'click #answer-save': 'writeAnswer',
             'click #timer-start': 'toggleTimer',
             'click #timer-reset': 'resetTimer'
@@ -75,7 +76,8 @@ var app = (function() {
             var distance = $('#answer-distance').val();
             var operator = $('#answer-relative-operator').val();
             var marker = $('#answer-marker').val();
-            var time_secs = app.timer.rep
+            var time_secs = app.timer.rep;
+            var timestamp = (new Date()).getTime();
 
             //[FIXME: validate]
             var actual_answer = $('#distance-display .absolute').html();
@@ -89,12 +91,13 @@ var app = (function() {
                 data: {
                     device_id: app.cur.device.model.get('id'),
                     subject_id: app.cur.subject.model.get('id'),
+                    timestamp: timestamp,
                     time_secs: time_secs,
                     answer: answer
                 },
                 success: function(data, textStatus, jqXHR) {
                     // update last answer block
-                    //[TODO]
+                    app.appView.setLastAnswer(app.cur.task.model.get('id'), app.timer.time(), answer, actual_answer);
 
                     // select next task
                     var curIndex = _(app.appView._childTaskViews).indexOf(app.cur.task);
@@ -103,7 +106,6 @@ var app = (function() {
                         curIndex = curIndex + 1;
                         if (curIndex < (app.appView._childTaskViews.length - 1)) {
                             // get the next task view
-                            app.appView.setLastAnswer(app.timer.time(), answer, actual_answer);
                             app.appView.selectTask(app.appView._childTaskViews[curIndex]);
                         }
                         else {
@@ -134,7 +136,8 @@ var app = (function() {
             app.cur.subject = view;
             app.cur.subject.select();
         },
-        setLastAnswer: function(time, answer, actual_answer) {
+        setLastAnswer: function(task_id, time, answer, actual_answer) {
+            $('#last-answer .task-id').html(task_id);
             $('#last-answer .actual-value').html(actual_answer);
             $('#last-answer .subject-value').html(answer);
             $('#last-answer .subject-time').html(time);
@@ -191,6 +194,9 @@ var app = (function() {
             f.find('legend').html('Edit subject');
             f.show();
         },
+        cancelSubjectForm: function() {
+            this.$('#subject-form-holder').hide();
+        },
         showNewSubjectForm: function() {
             var f = this.$('#subject-form-holder');
             f.find('#subject-id').val(-1).prop('disabled', true);
@@ -210,6 +216,15 @@ var app = (function() {
         },
         addAllMarkers: function() {
             app.paper.clear();
+            app.markerList.maxY = 0;
+            app.markerList.each(function(marker) {
+                var y = parseFloat(marker.get('y'));
+                if (y >= app.markerList.maxY) {
+                    app.markerList.maxY = y;
+                }
+            });
+            console.log(app.markerList.maxY);
+
             var x = app.markerList.translateX(0);
             var y = app.markerList.translateY(0);
             this.element = app.paper.circle(x, y, 1.5*MARKER_MAP_NODE_RADIUS);
@@ -414,7 +429,8 @@ var app = (function() {
     var Device = Backbone.Model.extend({
         defaults: {
             name: '',
-            type: ''
+            type: '',
+            server_timestamp: 0
         }
     });
     var DeviceView = Backbone.View.extend({
@@ -565,6 +581,20 @@ var app = (function() {
                     e.preventDefault();
                 }
             },
+        },
+        util: {
+            format_timestamp: function(ts) {
+                return app.util.ReadableDateString(new Date(ts)) + "<br/><small>" + ts + "</small>";
+            },
+            ReadableDateString: function(d) {
+                function pad(n){return n<10 ? '0'+n : n}
+                    return d.getFullYear()+'-'
+                        + pad(d.getMonth()+1)+'-'
+                        + pad(d.getDate())+' '
+                        + pad(d.getHours())+':'
+                        + pad(d.getMinutes())+':'
+                        + pad(d.getSeconds())
+            }
         },
         init: function() {
             app.appView = new AppView();

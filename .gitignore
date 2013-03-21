@@ -13,3 +13,4 @@ _scrap
 
 log/*.log
 data/*.dat
+data/*.csv
