@@ -1,7 +1,6 @@
 {
-    "pidfile":  "var/lavaze.pid",
     "logfile":  "log/lavaze.log",
-    "datafile": "data/results.txt",
+    "datafile": "data/results.csv",
 
     "debug": false,
 

@@ -29,6 +29,10 @@ def main():
     with open(CONFIG_FILE, 'r') as f:
         config = json.load(f)
 
+    # expand paths
+    config['logfile'] = abs_path(config['logfile'])
+    config['datafile'] = abs_path(config['datafile'])
+
     parser = OptionParser()
     parser.add_option('--debug', action='store_true', default=False,
                       help='log debugging messages too')
@@ -81,6 +85,10 @@ def lavaze_server(config, options):
     # start http server
     http_server = HttpServer(config)
     http_server.start()
+
+
+def abs_path(path):
+    return os.path.realpath(os.path.join(os.path.dirname(__file__), path))
 
 
 if __name__ == '__main__':

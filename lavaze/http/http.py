@@ -24,7 +24,6 @@ from lavaze.trial import Trial
 
 bottle.TEMPLATE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'views')),
 STATIC_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), 'static'))
-DATA_FILE = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'results.csv'))
 COMMENT_CHAR = '#'
 TRIAL_ID = 'TRIAL0'
 SUBJECT_ID = 'SUBJECT0'
@@ -41,11 +40,12 @@ class HttpServer(object):
             TRIAL_ID: Trial()
         }
 
-        self.storage = Storage(DATA_FILE, STORAGE_HEADERS)
+        self.storage = Storage(self.config['datafile'], STORAGE_HEADERS)
 
         # set up the routes manually
         bottle.route('/static/<filepath:path>', method='GET')(self.static)
         bottle.route('/', method='GET')(self.index)
+        bottle.route('/log', method='GET')(self.get_log)
 
         bottle.route('/devices', method='GET')(self.get_devices)
         bottle.route('/devices', method='POST')(self.register_device_xml)
@@ -66,272 +66,84 @@ class HttpServer(object):
         bottle.route('/subjects/<id>', method='DELETE')(self.delete_subject)
 
 
-    def get_subjects(self):
-        ret =  self.subjects.values()
-        return json.dumps(ret)
+    def start(self):
+        logging.info("Http control server started on port %s." % self.config['http_port'])
+        bottle.run(host=self.config['http_host'], port=self.config['http_port'], server='cherrypy', debug=False, quiet=True)
 
 
-    def create_subject(self):
-        subject = request.body.read()
-        try:
-            subject = json.loads(subject)
-            #[FIXME: validate]
-        except:
-            response.status = 500
-            ret = {"status": "ERROR", "body": traceback.format_exc()}
-            logging.error(traceback.format_exc())
-            return json.dumps(ret)
-
-        if subject['name'] == None or subject['height'] == None:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"Bad parameters"}
-
-        else:
-            #[XXX: only one subject at a time]
-            subject_id = SUBJECT_ID
-            subject = {
-                'id': subject_id,
-                'name': subject['name'],
-                'height': subject['height'],
-                'notes': subject['notes']
-            }
-            self.subjects[subject_id] = subject
-            ret = subject
-
-        return json.dumps(ret)
+    def index(self):
+        return static_file('index.html', root=STATIC_ROOT)
 
 
-    def get_subject(self, id):
-        if not id in self.subjects:
-            response.status = 404
-            ret = {"status":"ERROR", "body":"Subject not found"}
-        else:
-            ret = self.subjects[id]
+    def static(self, filepath):
+        if 'latest' in filepath:
+            response.set_header('Cache-Control', 'No-store')
 
-        return json.dumps(ret)
+        return static_file(filepath, root=STATIC_ROOT)
 
 
-    def update_subject(self, id):
-        subject = request.body.read()
-        try:
-            subject = json.loads(subject)
-            #[FIXME: validate]
-        except:
-            response.status = 500
-            ret = {"status": "ERROR", "body": traceback.format_exc()}
-            logging.error(traceback.format_exc())
-            return json.dumps(ret)
-
-        if not id in self.subjects:
-            response.status = 404
-            ret = {"status":"ERROR", "body":"Subject not found"}
-        else:
-            self.subjects[id]['name'] = subject['name']
-            self.subjects[id]['height'] = subject['height']
-            self.subjects[id]['notes'] = subject['notes']
-
-            ret = self.subjects[id]
-
-        return json.dumps(ret)
-
-
-    def delete_subject(self, id):
-        if not id in self.subjects:
-            response.status = 404
-            ret = {"status":"ERROR", "body":"Subject not found"}
-        else:
-            del self.subjects[id]
-            ret = {"status":"OK", "body":"Item deleted"}
-
-        return json.dumps(ret)
-
-    
-    def task_answer(self, id):
-        trial_id = request.forms.get('trial_id', TRIAL_ID)
-        device_id = request.forms.get('device_id', None)
-        subject_id = request.forms.get('subject_id', None)
-        timestamp = request.forms.get('timestamp', None)
-        time_secs = request.forms.get('time_secs', None)
-        answer = request.forms.get('answer', None)
-
-        if device_id == None or subject_id == None or time_secs == None or timestamp == None or answer == None:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"Bad parameters"}
-
-        elif trial_id not in self.trials:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"No such trial id"}
-
-        elif not device_id in self.devices:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"No such device id"}
-
-        elif not subject_id in self.subjects:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"No such subject id"}
-
-        else:
-            #[TODO: parse answer]
-            answer_abs, answer_raw = self.parse_answer(trial_id, answer)
-
-            # write answer to data file
-            record = [timestamp, trial_id, device_id, self.subjects[subject_id]['name'], self.subjects[subject_id]['height'],
-                      id, answer_abs, answer_raw, time_secs] 
-            self.storage.write_array(record)
-            logging.info("Wrote record: %s" % record)
-
-            ret = {"status": "OK", "body": "Task %s answered" % id}
-
-        return json.dumps(ret)
-
-    
-    def parse_answer(self, trial_id, answer):
-        abs = -1
-        if '<' in answer:
-            rel, marker = answer.split('<')
-            marker = int(marker) - 1
-            if marker > -1 and marker < len(self.trials[trial_id].markers):
-                print marker
-                print self.trials[trial_id].markers
-                y = self.trials[trial_id].markers[marker]['y']
-                abs = y - float(rel)
-
-        elif '>' in answer:
-            rel, marker = answer.split('>')
-            marker = int(marker) - 1
-            if marker > -1 and marker < len(self.trials[trial_id].markers):
-                print marker
-                print self.trials[trial_id].markers
-                y = self.trials[trial_id].markers[marker]['y']
-                abs = y + float(rel)
-
-        else:
-            abs = answer
-
-        return abs, answer
-
-    
-    def stop_task(self, id):
-        trial_id = request.forms.get('trial_id', TRIAL_ID)
-        device_id = request.forms.get('device_id', None)
-
-        if device_id == None or id == None:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"Bad parameters"}
-
-        elif not trial_id in self.trials:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"No such trial id"}
-
-        elif not device_id in self.devices:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"No such device id"}
-
-        elif not id in self.trials[trial_id].index:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"No such task id"}
-
-        else:
-            self.devices[device_id]['start_task_id'] = None
-            self.devices[device_id]['stop_task_id'] = id
-            ret = {"status": "OK", "body": "Stopped task %s" % id}
-
-        return json.dumps(ret)
-
-    
-    def start_task(self, id):
-        trial_id = request.forms.get('trial_id', TRIAL_ID)
-        device_id = request.forms.get('device_id', None)
-
-        if device_id == None or id == None:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"Bad parameters"}
-
-        elif not trial_id in self.trials:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"No such trial id"}
-
-        elif not device_id in self.devices:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"No such device id"}
-
-        elif not id in self.trials[trial_id].index:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"No such task id"}
-
-        else:
-            self.devices[device_id]['start_task_id'] = id
-            self.devices[device_id]['stop_task_id'] = None
-            ret = {"status": "OK", "body": "Stopped task %s" % id}
-
+    def get_log(self):
+        lines = request.query.n or 10
+        stdin,stdout = os.popen2("tail -n %s %s" % (lines, self.config['logfile']))
+        stdin.close()
+        log = stdout.readlines()
+        stdout.close()
+        ret = [{'log': l} for l in log] 
         return json.dumps(ret)
 
 
     def get_devices(self):
-        #ret = {"status": "OK", "body": self.devices}
         ret =  self.devices.values()
         return json.dumps(ret)
+
+    
+    def register_device_xml(self):
+        impl = minidom.getDOMImplementation()
+        ret = impl.createDocument(None, "ContextML", None)
+
+        # parse the input xml
+        deviceIn = request.body.read()
+        logging.debug("register_device_xml: got: %s" % deviceIn)
+
+        try:
+            deviceIn = minidom.parseString(deviceIn)
+
+            device_id = deviceIn.documentElement.attributes["device"].value
+            device_type = deviceIn.documentElement.attributes["type"].value
+            server_timestamp = time.time() * 1000
+
+            device = {
+                "id": device_id,
+                "type": device_type,
+                "server_timestamp": server_timestamp
+            }
+            
+            if not device_id in self.devices:
+                device["first_server_timestamp"] = server_timestamp
+                device["start_task_id"] = None
+                device["stop_task_id"] = None
+                self.devices[device_id] = device
+            else:
+                self.devices[device_id].update(device)
+
+            ret = self._get_device_response_xml(device_id, ret)
+            logging.info("register_device_xml: registered device: %s", device["id"])
+        except:
+            ret = self._get_device_error_response_xml(traceback.format_exc(), ret)
+            logging.error(traceback.format_exc())
+
+        logging.debug("register_device_xml: sending xml: %s" % ret.toxml())
+        return ret.toxml()
 
 
     def get_tasks(self):
         trial_id = request.query.get('trial_id', TRIAL_ID)
         if trial_id in self.trials:
-            #ret = {"status": "OK", "body": self.trials[trial_id].tasks}
             ret = self.trials[trial_id].tasks
         else:
             response.status = 500
             ret = {"status":"ERROR", "body":"No such trial id"}
-
-        return json.dumps(ret)
-
-
-    def get_markers(self):
-        trial_id = request.query.get('trial_id', TRIAL_ID)
-        if trial_id in self.trials:
-            #ret = {"status": "OK", "body": self.trials[trial_id].tasks}
-            ret = self.trials[trial_id].markers
-        else:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"No such trial id"}
-
-        return json.dumps(ret)
-
-
-    def register_markers(self):
-        trial_id = request.query.get('trial_id', TRIAL_ID)
-        if not trial_id in self.trials:
-            response.status = 500
-            ret = {"status":"ERROR", "body":"No such trial id"}
-        else:
-            # parse the input txt
-            markers = []
-            try:
-                markers_spec = request.files.get('markers-spec[]').file
-                for l in markers_spec:
-                    l = l.rstrip()
-                    if l.startswith(COMMENT_CHAR):
-                        continue
-                    else:
-                        # split a record, tab delimited
-                        fields = re.split('\s+', l)
-                        marker = {
-                            'id': fields[0],
-                            'x': float(fields[1]),
-                            'y': float(fields[2]),
-                            'color': fields[3]
-                        }
-                        markers.append(marker)
-            except:
-                response.status = 500
-                ret = {"status": "ERROR", "body": traceback.format_exc()}
-                logging.error(traceback.format_exc())
-                return json.dumps(ret)
-
-            # NOTE: currently there is only 1 trial.
-            # Re-uploading markers overwrites existing spec, if any.
-            self.trials[trial_id].markers = markers
-
-            ret = {"status": "OK", "body": "Registered %s markers" % len(markers)}
+            logging.error("get_tasks: no such trial id: %s" % trial_id)
 
         return json.dumps(ret)
 
@@ -376,50 +188,295 @@ class HttpServer(object):
         self.trials[TRIAL_ID].set_tasks(tasks)
 
         ret = {"status": "OK", "body": "Registered trial with %s tasks" % len(tasks)}
+        logging.info("register_tasks: registered trial with %s tasks" % len(tasks))
         return json.dumps(ret)
 
     
-    def register_device_xml(self):
-        impl = minidom.getDOMImplementation()
-        ret = impl.createDocument(None, "ContextML", None)
+    def start_task(self, id):
+        trial_id = request.forms.get('trial_id', TRIAL_ID)
+        device_id = request.forms.get('device_id', None)
 
-        # parse the input xml
-        deviceIn = request.body.read()
-        print deviceIn
-        try:
-            deviceIn = minidom.parseString(deviceIn)
+        if device_id == None:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"Bad parameters"}
+            logging.error("start_task: bad parameters: %s" % device_id)
 
-            device_id = deviceIn.documentElement.attributes["device"].value
-            device_type = deviceIn.documentElement.attributes["type"].value
-            server_timestamp = time.time() * 1000
+        elif not trial_id in self.trials:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"No such trial id"}
+            logging.error("start_task: no such trial id: %s" % trial_id)
 
-            device = {
-                "id": device_id,
-                "type": device_type,
-                "server_timestamp": server_timestamp
-            }
-            
-            if not device_id in self.devices:
-                device["first_server_timestamp"] = server_timestamp
-                device["start_task_id"] = None
-                device["stop_task_id"] = None
-                self.devices[device_id] = device
-            else:
-                self.devices[device_id].update(device)
+        elif not device_id in self.devices:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"No such device id"}
+            logging.error("start_task: no such device id: %s" % device_id)
 
-            logging.info("Registered device: %s", device["id"])
-        except:
-            ret.documentElement.appendChild(ret.createElement('ctxEL').appendChild(ret.createElement('error').appendChild(ret.createTextNode(traceback.format_exc()))))
-            logging.error(traceback.format_exc())
-            return ret.toxml()
+        elif not id in self.trials[trial_id].index:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"No such task id"}
+            logging.error("start_task: no such task id: %s" % id)
 
-        #[FIXME: proper output]
-        ret = self.get_device_response_xml(device_id, ret)
-        print ret.toxml()
-        return ret.toxml()
+        else:
+            self.devices[device_id]['start_task_id'] = id
+            self.devices[device_id]['stop_task_id'] = None
+            ret = {"status": "OK", "body": "Started task %s" % id}
+            logging.info("start_task: started task %s" % id)
+
+        return json.dumps(ret)
 
     
-    def get_device_response_xml(self, device_id, ret):
+    def stop_task(self, id):
+        trial_id = request.forms.get('trial_id', TRIAL_ID)
+        device_id = request.forms.get('device_id', None)
+
+        if device_id == None:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"Bad parameters"}
+            logging.error("stop_task: bad parameters: %s" % device_id)
+
+        elif not trial_id in self.trials:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"No such trial id"}
+            logging.error("stop_task: no such trial id: %s" % trial_id)
+
+        elif not device_id in self.devices:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"No such device id"}
+            logging.error("stop_task: no such device id: %s" % device_id)
+
+        elif not id in self.trials[trial_id].index:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"No such task id"}
+            logging.error("stop_task: no such task id: %s" % id)
+
+        else:
+            self.devices[device_id]['start_task_id'] = None
+            self.devices[device_id]['stop_task_id'] = id
+            ret = {"status": "OK", "body": "Stopped task %s" % id}
+            logging.info("stop_task: stopped task %s" % id)
+
+        return json.dumps(ret)
+
+    
+    def task_answer(self, id):
+        trial_id = request.forms.get('trial_id', TRIAL_ID)
+        device_id = request.forms.get('device_id', None)
+        subject_id = request.forms.get('subject_id', None)
+        timestamp = request.forms.get('timestamp', None)
+        time_secs = request.forms.get('time_secs', None)
+        answer = request.forms.get('answer', None)
+
+        if device_id == None or subject_id == None or time_secs == None or timestamp == None or answer == None:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"Bad parameters"}
+            logging.error("task_answer: bad parameters: %s" % device_id)
+
+        elif trial_id not in self.trials:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"No such trial id"}
+            logging.error("task_answer: no such trial id: %s" % trial_id)
+
+        elif not device_id in self.devices:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"No such device id"}
+            logging.error("task_answer: no such device id: %s" % device_id)
+
+        elif not subject_id in self.subjects:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"No such subject id"}
+            logging.error("task_answer: no such subject id: %s" % id)
+
+        else:
+            #[TODO: parse answer]
+            answer_abs, answer_raw = self._parse_answer(trial_id, answer)
+
+            # write answer to data file
+            record = [timestamp, trial_id, device_id, self.subjects[subject_id]['name'], self.subjects[subject_id]['height'],
+                      id, answer_abs, answer_raw, time_secs] 
+            self.storage.write_array(record)
+            logging.debug("task_answer: wrote record: %s" % record)
+
+            ret = {"status": "OK", "body": "Task %s answered" % id}
+            logging.info("task_answer: answered task %s" % id)
+
+        return json.dumps(ret)
+
+
+    def get_markers(self):
+        trial_id = request.query.get('trial_id', TRIAL_ID)
+        if trial_id in self.trials:
+            ret = self.trials[trial_id].markers
+        else:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"No such trial id"}
+            logging.error("get_markers: no such trial id: %s" % trial_id)
+
+        return json.dumps(ret)
+
+
+    def register_markers(self):
+        trial_id = request.query.get('trial_id', TRIAL_ID)
+        if not trial_id in self.trials:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"No such trial id"}
+        else:
+            # parse the input txt
+            markers = []
+            try:
+                markers_spec = request.files.get('markers-spec[]').file
+                for l in markers_spec:
+                    l = l.rstrip()
+                    if l.startswith(COMMENT_CHAR):
+                        continue
+                    else:
+                        # split a record, tab delimited
+                        fields = re.split('\s+', l)
+                        marker = {
+                            'id': fields[0],
+                            'x': float(fields[1]),
+                            'y': float(fields[2]),
+                            'color': fields[3]
+                        }
+                        markers.append(marker)
+            except:
+                response.status = 500
+                ret = {"status": "ERROR", "body": traceback.format_exc()}
+                logging.error(traceback.format_exc())
+                return json.dumps(ret)
+
+            # NOTE: currently there is only 1 trial.
+            # Re-uploading markers overwrites existing spec, if any.
+            self.trials[trial_id].markers = markers
+
+            ret = {"status": "OK", "body": "Registered %s markers" % len(markers)}
+            logging.info("register_markers: registered %s markers" % len(markers))
+
+        return json.dumps(ret)
+
+
+    def get_subjects(self):
+        ret =  self.subjects.values()
+        return json.dumps(ret)
+
+
+    def create_subject(self):
+        subject = request.body.read()
+        try:
+            subject = json.loads(subject)
+            #[FIXME: validate]
+        except:
+            response.status = 500
+            ret = {"status": "ERROR", "body": traceback.format_exc()}
+            logging.error(traceback.format_exc())
+            return json.dumps(ret)
+
+        if subject['name'] == None or subject['height'] == None:
+            response.status = 500
+            ret = {"status":"ERROR", "body":"Bad parameters"}
+            logging.error("create_subject: bad parameters: %s" % subject)
+
+        else:
+            #[XXX: only one subject at a time]
+            subject_id = SUBJECT_ID
+            subject = {
+                'id': subject_id,
+                'name': subject['name'],
+                'height': subject['height'],
+                'notes': subject['notes']
+            }
+            self.subjects[subject_id] = subject
+            ret = subject
+            logging.info("create_subject: created subject: %s" % subject)
+
+        return json.dumps(ret)
+
+
+    def get_subject(self, id):
+        if not id in self.subjects:
+            response.status = 404
+            ret = {"status":"ERROR", "body":"Subject not found"}
+            logging.error("get_subject: subject not found: %s" % id)
+        else:
+            ret = self.subjects[id]
+
+        return json.dumps(ret)
+
+
+    def update_subject(self, id):
+        subject = request.body.read()
+        try:
+            subject = json.loads(subject)
+            #[FIXME: validate]
+        except:
+            response.status = 500
+            ret = {"status": "ERROR", "body": traceback.format_exc()}
+            logging.error(traceback.format_exc())
+            return json.dumps(ret)
+
+        if not id in self.subjects:
+            response.status = 404
+            ret = {"status":"ERROR", "body":"Subject not found"}
+            logging.error("get_subject: subject not found: %s" % id)
+        else:
+            self.subjects[id]['name'] = subject['name']
+            self.subjects[id]['height'] = subject['height']
+            self.subjects[id]['notes'] = subject['notes']
+
+            ret = self.subjects[id]
+            logging.info("update_subject: updated subject: %s" % subject)
+
+        return json.dumps(ret)
+
+
+    def delete_subject(self, id):
+        if not id in self.subjects:
+            response.status = 404
+            ret = {"status":"ERROR", "body":"Subject not found"}
+            logging.error("delete_subject: subject not found: %s" % id)
+        else:
+            del self.subjects[id]
+            ret = {"status":"OK", "body":"Item deleted"}
+            logging.info("delete_subject: subject deleted: %s" % id)
+
+        return json.dumps(ret)
+
+    
+    def _parse_answer(self, trial_id, answer):
+        abs = -1
+        if '<' in answer:
+            rel, marker = answer.split('<')
+            marker = int(marker) - 1
+            if marker > -1 and marker < len(self.trials[trial_id].markers):
+                y = self.trials[trial_id].markers[marker]['y']
+                abs = y - float(rel)
+
+        elif '>' in answer:
+            rel, marker = answer.split('>')
+            marker = int(marker) - 1
+            if marker > -1 and marker < len(self.trials[trial_id].markers):
+                y = self.trials[trial_id].markers[marker]['y']
+                abs = y + float(rel)
+
+        else:
+            abs = answer
+
+        return abs, answer
+
+    
+    # Helpers
+    def _get_device_error_response_xml(self, error, ret):
+        ctxEL = ret.createElement('ctxEl')
+
+        errorEl = ret.createElement('error')
+        errorEl.appendChild(ret.createTextNode(error))
+
+        ctxEl.appendChild(errorEl)
+
+        ret.documentElement.appendChild(ctxEl)
+        return ret
+
+
+    def _get_device_response_xml(self, device_id, ret):
         ctxEL = ret.createElement('ctxEl')
         start_task_id = self.devices[device_id]['start_task_id']
         stop_task_id = self.devices[device_id]['stop_task_id']
@@ -447,20 +504,4 @@ class HttpServer(object):
 
         ret.documentElement.appendChild(ctxEL)
         return ret
-
-
-    def start(self):
-        logging.info("Http control server started on port %s." % self.config['http_port'])
-        bottle.run(host=self.config['http_host'], port=self.config['http_port'], server='cherrypy', debug=False, quiet=True)
-
-
-    def index(self):
-        return static_file('index.html', root=STATIC_ROOT)
-
-
-    def static(self, filepath):
-        if 'latest' in filepath:
-            response.set_header('Cache-Control', 'No-store')
-
-        return static_file(filepath, root=STATIC_ROOT)
 

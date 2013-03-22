@@ -32,6 +32,9 @@ var app = (function() {
             app.subjectList.on('reset', this.addAllSubjects, this);
             app.subjectList.fetch();
 
+            app.logList.on('reset', this.addAllLogs, this);
+            app.logList.fetch();
+
             this.timerEl = $('#timer .time');
         },
         events: {
@@ -39,6 +42,7 @@ var app = (function() {
             'click #subject-list-new': 'showNewSubjectForm',
             'click #subject-save': 'writeSubject',
             'click #subject-cancel': 'cancelSubjectForm',
+            'click #log-list-refresh': 'logListRefresh',
             'click #answer-save': 'writeAnswer',
             'click #timer-start': 'toggleTimer',
             'click #timer-reset': 'resetTimer'
@@ -253,6 +257,13 @@ var app = (function() {
             app.deviceList.each(this.addOneDevice, this);
             //this.$('#device-list tr:first-child input[type="radio"]').prop('checked', true);
         },
+        addOneLog: function(item) {
+            this.$('#log-list pre').append(item.get('log'));
+        },
+        addAllLogs: function() {
+            this.$('#log-list pre').empty();
+            app.logList.each(this.addOneLog, this);
+        },
         writeSubject: function() {
             var id = this.$('#subject-id').val();
             var name = this.$('#subject-name').val();
@@ -286,6 +297,10 @@ var app = (function() {
         taskListRefresh: function() {
             console.log('taskListRefresh()');
             app.taskList.fetch();
+        },
+        logListRefresh: function() {
+            console.log('logListRefresh()');
+            app.logList.fetch();
         }
     });
 
@@ -426,6 +441,10 @@ var app = (function() {
         }
     });
 
+    var LogList = Backbone.Collection.extend({
+        url: '/log',
+    });
+
     var Device = Backbone.Model.extend({
         defaults: {
             name: '',
@@ -525,6 +544,8 @@ var app = (function() {
         subjectList: new SubjectList(),
         markerList: new MarkerList(),
         taskList: new TaskList(),
+        logList: new LogList(),
+
         events: {
             textInputFocus: function(e) {
                 e.target.select();
