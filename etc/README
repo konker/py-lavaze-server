@@ -1,0 +1,14 @@
+lavaze-server system integration resources
+==============================================================================
+    - lavaze-server: init.d script
+        - customise:
+            - Edit as appropriate:
+                DAEMON=...
+
+        - to install:
+            $ cp lavaze-server /etc/init.d
+            $ update-rc.d lavaze-server defaults
+
+    - nginx.conf: nginx reverse proxy configuration
+
+
