@@ -564,7 +564,7 @@ var app = (function() {
                         relative = y - my;
                     }
                     else if (operator == '<') {
-                        relative = y - my;
+                        relative = my - y;
                     }
 
                     console.log(my)
@@ -584,12 +584,14 @@ var app = (function() {
                     // <
                     $('#answer-relative-operator').val('<');
                     $('#answer-marker').focus();
+                    app.events.markerChange();
                     e.preventDefault();
                 }
                 else if (e.which == 62) {
                     // >
                     $('#answer-relative-operator').val('>');
                     $('#answer-marker').focus();
+                    app.events.markerChange();
                     e.preventDefault();
                 }
                 else if (e.which == 32) {

@@ -127,6 +127,7 @@ body {
             }
         #last-answer .actual-value {
             display: inline-block;
+            color: #0a0;
             margin-left: 1.0em;
             margin-right: 1.0em;
             }
