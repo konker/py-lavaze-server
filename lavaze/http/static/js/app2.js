@@ -579,6 +579,36 @@ var app = (function() {
                     }
                 }
             },
+            textInputKeydown: function(e) {
+                if (e.which == 9) {
+                    // tab
+                    if (e.target.id == 'answer-distance') {
+                        if (e.shiftKey) {
+                            $('#answer-marker').focus();
+                        }
+                        else {
+                            $('#answer-relative-operator').focus();
+                        }
+                    }
+                    else if (e.target.id == 'answer-relative-operator') {
+                        if (e.shiftKey) {
+                            $('#answer-distance').focus();
+                        }
+                        else {
+                            $('#answer-marker').focus();
+                        }
+                    }
+                    else if (e.target.id == 'answer-marker') {
+                        if (e.shiftKey) {
+                            $('#answer-relative-operator').focus();
+                        }
+                        else {
+                            $('#answer-distance').focus();
+                        }
+                    }
+                    e.preventDefault();
+                }
+            },
             textInputKeypress: function(e) {
                 if (e.which == 60) {
                     // <
@@ -595,8 +625,13 @@ var app = (function() {
                     e.preventDefault();
                 }
                 else if (e.which == 32) {
-                    //space
+                    // space
                     app.appView.toggleTimer();
+                    e.preventDefault();
+                }
+                else if (e.which == 9) {
+                    // tab
+                    console.log(e.target);
                     e.preventDefault();
                 }
                 else if (e.which == 13) {
@@ -674,6 +709,7 @@ var app = (function() {
             // capture keyboard shortcuts
             $('#app').on('keypress', app.events.globalKeypress);
             $('#answer input').on('focus', app.events.textInputFocus);
+            $('#answer input').on('keydown', app.events.textInputKeydown);
             $('#answer input').on('keypress', app.events.textInputKeypress);
             $('#answer-marker').on('change', app.events.markerChange);
             $('#answer-relative-operator').on('change', app.events.markerChange);
