@@ -68,24 +68,29 @@ http://localhost:8080/ (or whatever port you have configured in config/system.js
 4) On the netbook open a web browser to http://localhost:8080/ (or whatever port you have configured in config/system.json)
 
 5) Upload the task description file:
-    i) Click the blue "upload" button in the title bar of the "Tasks" panel
-    ii) Choose a task description file from the filesystem, and upload.
+    - Click the blue "upload" button in the title bar of the "Tasks" panel
+    - Choose a task description file from the filesystem, and upload.
+
    A list of tasks will be displayed in the "Tasks" panel.
+
    *NOTE*: the task description file is the same format as the external.dat file
    that is on the tablet.
 
 6) Upload a field test configuration file:
-    i) Click the blue "upload" button in the title bar of the "Configuration" panel
-    ii) Choose a field test configuration file from the filesystem and uplod.
+    - Click the blue "upload" button in the title bar of the "Configuration" panel
+    - Choose a field test configuration file from the filesystem and uplod.
+
    The markers specified in the configuration file will be displayed in the
    "Configuration" panel.
 
 7) Create a subject
-    i) Click the blue "new" button in the title bar of the "Subjects" panel
-    ii) Enter a subject id and a height in metres. The Subject id can be anything
+    - Click the blue "new" button in the title bar of the "Subjects" panel
+    - Enter a subject id and a height in metres. The Subject id can be anything
         that you want.
-    iii) Click "save" to save the subject.
+    - Click "save" to save the subject.
+
    Subjects can be edited or deleted after they have been created.
+
    *NOTE*: To run a field test at least one subject must exist, *and* selected. A selected
    subject is highlighted in blue.
 
@@ -93,6 +98,7 @@ http://localhost:8080/ (or whatever port you have configured in config/system.js
    The "Devices" panel shows all devices that have successfully established a connection
    with the server. You must select one of these devices to perform a field test. A
    selected device is highlighted in blue.
+
    *NOTE*: you must manually refresh this panel by clicking the amber "refresh" button
    in the title bar.
 
@@ -106,6 +112,7 @@ Once preparation has been completed as described above, and:
     - A device has been selected
 
 You can begin the field test. Simply click on of the tasks to start.
+
 The tablet should show the first test case. The server UI will automatically move focus
 to the data entry field in the :"Answers" Panel.
 
@@ -121,8 +128,8 @@ Answers can be in 2 different forms:
     2) an estimate relative to a marker, in metres.
 
 There are 3 data entry fields.
-To enter an absolute value, just enter the number
-and press "Enter".
+
+To enter an absolute value, just enter the number and press "Enter".
 
 To enter a relative value you need a distance estimate, a marker number,
 and whether the estimate is before or after the marker.
@@ -131,8 +138,11 @@ and whether the estimate is before or after the marker.
       denoted by either '<' or '>' respectively.
     - The third field is the marker number.
 
-e.g. To enter an estimate of "25m after marker 3" you would enter: "25 > 3"
-     To enter an estimate of "25m before marker 6" you would enter "25 < 6"
+e.g. To enter an estimate of "25m after marker 3" you would enter:
+    25 > 3
+
+To enter an estimate of "25m before marker 6" you would enter:
+    25 < 6
 
 *NOTE*: You do not need to manually switch the focus of the data entry text fields.
 Focus will automatically switch when you type a '<' or '>' character.
@@ -140,11 +150,12 @@ Focus will automatically switch when you type a '<' or '>' character.
 ### Timer
 There is a timer which records the time spent on the field test.
 This can be paused/started or reset at any time using the buttons below the timer display.
+
 *NOTE*: when the data entry fields have focus, the timer can be paused/started by
 pressing the space bar.
 
 ### Last answer
-The are on the right of the "Answers" panel shows the last answer that was entered.
+The area on the right of the "Answers" panel shows the last answer that was entered.
 The display shows:
     - the actual distance of the test case
     - the estimate given by the subject
