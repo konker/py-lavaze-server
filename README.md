@@ -124,9 +124,7 @@ It is split into 3 areas.
 
 ### Data entry fields
 Answers can be in 2 different forms:
-
     1) an absolute distance estimate, in metres.
-
     2) an estimate relative to a marker, in metres.
 
 There are 3 data entry fields.
@@ -135,21 +133,16 @@ To enter an absolute value, just enter the number and press "Enter".
 
 To enter a relative value you need a distance estimate, a marker number,
 and whether the estimate is before or after the marker.
-
     - The first field is the distance estimate.
-
     - The second field indicates that the estimate is before or after the marker,
       denoted by either '<' or '>' respectively.
-
     - The third field is the marker number.
 
 e.g. To enter an estimate of "25m after marker 3" you would enter:
-
-    25 > 3
+```25 > 3```
 
 To enter an estimate of "25m before marker 6" you would enter:
-
-    25 < 6
+```25 < 6```
 
 *NOTE*: You do not need to manually switch the focus of the data entry text fields.
 Focus will automatically switch when you type a '<' or '>' character.
@@ -164,11 +157,8 @@ pressing the space bar.
 ### Last answer
 The area on the right of the "Answers" panel shows the last answer that was entered.
 The display shows:
-
     - the actual distance of the test case
-
     - the estimate given by the subject
-
     - the time spent on that test case
 
 
