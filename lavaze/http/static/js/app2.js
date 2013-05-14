@@ -558,7 +558,7 @@ var app = (function() {
                     marker = parseInt(marker) - 1;
                     var my = parseFloat(app.markerList.models[marker].get('y'));
                     var y = parseFloat(app.cur.task.model.get('f6'));
-                    var relative = -1;
+                    var relative = null;
 
                     if (operator == '>') {
                         relative = y - my;
@@ -571,7 +571,7 @@ var app = (function() {
                     console.log(y)
                     console.log(operator)
                     console.log(relative)
-                    if (relative >= 0) {
+                    if (relative != null) {
                         $('#distance-display .relative').html(relative);
                     }
                     else {
@@ -711,7 +711,7 @@ var app = (function() {
             $('#answer input').on('focus', app.events.textInputFocus);
             $('#answer input').on('keydown', app.events.textInputKeydown);
             $('#answer input').on('keypress', app.events.textInputKeypress);
-            $('#answer-marker').on('change', app.events.markerChange);
+            $('#answer-marker').on('input', app.events.markerChange);
             $('#answer-relative-operator').on('change', app.events.markerChange);
         }
     }
