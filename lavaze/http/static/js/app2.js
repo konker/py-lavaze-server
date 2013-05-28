@@ -77,6 +77,7 @@ var app = (function() {
         },
         writeAnswer: function() {
             var url = '/tasks/' + app.cur.task.model.get('id') + '/answer';
+            var absdistance = $('#answer-absdistance').val();
             var distance = $('#answer-distance').val();
             var operator = $('#answer-relative-operator').val();
             var marker = $('#answer-marker').val();
@@ -84,10 +85,10 @@ var app = (function() {
             var timestamp = (new Date()).getTime();
 
             //[FIXME: validate]
-            var actual_answer = $('#distance-display .absolute').html();
-            if (operator != '') {
-                actual_answer = $('#distance-display .relative').html() + operator + marker;
-            }
+            var actual_absanswer = $('#distance-display .absolute').html();
+            var actual_answer = $('#distance-display .relative').html() + operator + marker;
+
+            var absanswer = absdistance;
             var answer = distance + operator + marker;
             $.ajax({
                 url: url,
@@ -97,11 +98,12 @@ var app = (function() {
                     subject_id: app.cur.subject.model.get('id'),
                     timestamp: timestamp,
                     time_secs: time_secs,
+                    absanswer: absanswer,
                     answer: answer
                 },
                 success: function(data, textStatus, jqXHR) {
                     // update last answer block
-                    app.appView.setLastAnswer(app.cur.task.model.get('id'), app.timer.time(), answer, actual_answer);
+                    app.appView.setLastAnswer(app.cur.task.model.get('id'), app.timer.time(), absanswer, answer, actual_absanswer, actual_answer);
 
                     // select next task
                     var curIndex = _(app.appView._childTaskViews).indexOf(app.cur.task);
@@ -140,9 +142,11 @@ var app = (function() {
             app.cur.subject = view;
             app.cur.subject.select();
         },
-        setLastAnswer: function(task_id, time, answer, actual_answer) {
+        setLastAnswer: function(task_id, time, absanswer, answer, actual_absanswer, actual_answer) {
             $('#last-answer .task-id').html(task_id);
+            $('#last-answer .actual-absvalue').html(actual_absanswer);
             $('#last-answer .actual-value').html(actual_answer);
+            $('#last-answer .subject-absvalue').html(absanswer);
             $('#last-answer .subject-value').html(answer);
             $('#last-answer .subject-time').html(time);
         },
@@ -170,6 +174,7 @@ var app = (function() {
 
                         $('#answer-relative-operator').val('');
                         $('#answer-marker').val('');
+                        $('#answer-distance').val('');
                         $('#answer-absdistance').val('').focus();
 
                         app.appView.resetTimer();
@@ -582,9 +587,17 @@ var app = (function() {
             textInputKeydown: function(e) {
                 if (e.which == 9) {
                     // tab
-                    if (e.target.id == 'answer-distance') {
+                    if (e.target.id == 'answer-absdistance') {
                         if (e.shiftKey) {
                             $('#answer-marker').focus();
+                        }
+                        else {
+                            $('#answer-distance').focus();
+                        }
+                    }
+                    else if (e.target.id == 'answer-distance') {
+                        if (e.shiftKey) {
+                            $('#answer-absdistance').focus();
                         }
                         else {
                             $('#answer-relative-operator').focus();
@@ -603,7 +616,7 @@ var app = (function() {
                             $('#answer-relative-operator').focus();
                         }
                         else {
-                            $('#answer-distance').focus();
+                            $('#answer-absdistance').focus();
                         }
                     }
                     e.preventDefault();
@@ -635,6 +648,7 @@ var app = (function() {
                     e.preventDefault();
                 }
                 else if (e.which == 13) {
+                    // enter
                     app.appView.writeAnswer();
                     e.preventDefault();
                 }

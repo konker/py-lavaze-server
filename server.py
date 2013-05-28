@@ -10,6 +10,7 @@
 
 import sys
 import os
+import time
 
 import pathhack
 import logging
@@ -31,7 +32,7 @@ def main():
 
     # expand paths
     config['logfile'] = abs_path(config['logfile'])
-    config['datafile'] = abs_path(config['datafile'])
+    config['datafile'] = abs_path_ts(config['datafile'])
 
     parser = OptionParser()
     parser.add_option('--debug', action='store_true', default=False,
@@ -89,6 +90,11 @@ def lavaze_server(config, options):
 
 def abs_path(path):
     return os.path.realpath(os.path.join(os.path.dirname(__file__), path))
+
+
+def abs_path_ts(path):
+    f, ext = os.path.splitext(os.path.basename(path))
+    return os.path.realpath(os.path.join(os.path.dirname(__file__), os.path.dirname(path), "%s_%s%s" % (f, int(time.time()), ext)))
 
 
 if __name__ == '__main__':

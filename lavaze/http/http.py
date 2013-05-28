@@ -28,7 +28,7 @@ COMMENT_CHAR = '#'
 TRIAL_ID = 'TRIAL0'
 SUBJECT_ID = 'SUBJECT0'
 STORAGE_HEADERS = ['timestamp', 'trial_id', 'device_id', 'subject_id', 'subject_height',
-                   'task_id', 'answer_abs', 'answer_raw', 'time_secs']
+                   'task_id', 'answer_abs', 'answer_rel_abs', 'answer_rel_raw', 'time_secs']
 
 
 class HttpServer(object):
@@ -264,9 +264,10 @@ class HttpServer(object):
         subject_id = request.forms.get('subject_id', None)
         timestamp = request.forms.get('timestamp', None)
         time_secs = request.forms.get('time_secs', None)
+        absanswer = request.forms.get('absanswer', None)
         answer = request.forms.get('answer', None)
 
-        if device_id == None or subject_id == None or time_secs == None or timestamp == None or answer == None:
+        if device_id == None or subject_id == None or time_secs == None or timestamp == None or (absanswer == None and answer == None):
             response.status = 500
             ret = {"status":"ERROR", "body":"Bad parameters"}
             logging.error("task_answer: bad parameters: %s" % device_id)
@@ -288,11 +289,11 @@ class HttpServer(object):
 
         else:
             #[TODO: parse answer]
-            answer_abs, answer_raw = self._parse_answer(trial_id, answer)
+            answer_relabs, answer_raw = self._parse_answer(trial_id, answer)
 
             # write answer to data file
             record = [timestamp, trial_id, device_id, self.subjects[subject_id]['name'], self.subjects[subject_id]['height'],
-                      id, answer_abs, answer_raw, time_secs] 
+                      id, absanswer, answer_relabs, answer_raw, time_secs] 
             self.storage.write_array(record)
             logging.debug("task_answer: wrote record: %s" % record)
 
@@ -442,25 +443,25 @@ class HttpServer(object):
 
     
     def _parse_answer(self, trial_id, answer):
-        abs = -1
+        relabs = -1
         if '<' in answer:
             rel, marker = answer.split('<')
             marker = int(marker) - 1
             if marker > -1 and marker < len(self.trials[trial_id].markers):
                 y = self.trials[trial_id].markers[marker]['y']
-                abs = y - float(rel)
+                relabs = y - float(rel)
 
         elif '>' in answer:
             rel, marker = answer.split('>')
             marker = int(marker) - 1
             if marker > -1 and marker < len(self.trials[trial_id].markers):
                 y = self.trials[trial_id].markers[marker]['y']
-                abs = y + float(rel)
+                relabs = y + float(rel)
 
         else:
-            abs = answer
+            relabs = answer
 
-        return abs, answer
+        return relabs, answer
 
     
     # Helpers

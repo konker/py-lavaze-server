@@ -79,21 +79,21 @@ body {
     #answer-absdistance {
         width: 2.0em;
         margin-right: 0.75em;
-        background: #dfd;
+        background: #ddf;
         }
     #answer-distance {
         width: 2.0em;
-        background: #ddf;
+        background: #e8d7ba;
         }
     #answer-relative-operator {
         width: 1.0em;
         margin-left: 0.25em;
-        background: #ddf;
+        background: #e8d7ba;
         }
     #answer-marker {
         width: 2.0em;
         margin-left: 0.25em;
-        background: #ddf;
+        background: #e8d7ba;
         }
     #answer-actual {
         display: inline-block;
@@ -133,16 +133,27 @@ body {
             font-size: 100%;
             line-height: 1.2;
             }
-        #last-answer .actual-value {
+        #last-answer .actual-absvalue {
             display: inline-block;
             color: #0a0;
             margin-left: 1.0em;
+            margin-right: 0.5em;
+            }
+        #last-answer .actual-value {
+            display: inline-block;
+            color: #0a0;
+            margin-left: 0.5em;
             margin-right: 1.0em;
             }
-        #last-answer .subject-value {
+        #last-answer .subject-absvalue {
             display: inline-block;
             margin-left: 1.0em;
             margin-right: 0.5em;
+            }
+        #last-answer .subject-value {
+            display: inline-block;
+            margin-left: 0.5em;
+            margin-right: 1.0em;
             }
         #last-answer .subject-time {
             display: inline-block;
