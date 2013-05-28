@@ -96,7 +96,7 @@ class HttpServer(object):
         ret =  self.devices.values()
         return json.dumps(ret)
 
-    
+
     def register_device_xml(self):
         impl = minidom.getDOMImplementation()
         ret = impl.createDocument(None, "ContextML", None)

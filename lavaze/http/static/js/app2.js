@@ -170,7 +170,7 @@ var app = (function() {
 
                         $('#answer-relative-operator').val('');
                         $('#answer-marker').val('');
-                        $('#answer-distance').val('').focus();
+                        $('#answer-absdistance').val('').focus();
 
                         app.appView.resetTimer();
                         app.appView.toggleTimer();

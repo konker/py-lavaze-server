@@ -76,21 +76,29 @@ body {
     #answer-form-holder {
         padding: 16px;
         }
+    #answer-absdistance {
+        width: 2.0em;
+        margin-right: 0.75em;
+        background: #dfd;
+        }
     #answer-distance {
         width: 2.0em;
+        background: #ddf;
+        }
+    #answer-relative-operator {
+        width: 1.0em;
+        margin-left: 0.25em;
+        background: #ddf;
+        }
+    #answer-marker {
+        width: 2.0em;
+        margin-left: 0.25em;
+        background: #ddf;
         }
     #answer-actual {
         display: inline-block;
         display: none;
         min-width: 3.0em;
-        }
-    #answer-relative-operator {
-        width: 1.0em;
-       margin-left: 0.75em;
-        }
-    #answer-marker {
-        width: 2.0em;
-        margin-left: 0.75em;
         }
     #answer-save {
         margin-left: 0.75em;
