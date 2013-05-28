@@ -27,7 +27,7 @@ class Storage(BaseStorage):
             # assume a new file, so write headers, if any
             if headers:
                 try:
-                    with open(self.filepath, 'wb') as f:
+                    with open(self.filepath, 'ab') as f:
                         writer = csv.writer(f)
                         writer.writerow(headers)
 
@@ -42,7 +42,7 @@ class Storage(BaseStorage):
 
     def write_array(self, array):
         try:
-            with open(self.filepath, 'wb') as f:
+            with open(self.filepath, 'ab') as f:
                 writer = csv.writer(f)
                 writer.writerow(array)
 
