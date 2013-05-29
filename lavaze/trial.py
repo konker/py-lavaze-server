@@ -11,7 +11,7 @@
 class Trial:
     def __init__(self, tasks=None):
         self.set_tasks(tasks)
-        self.markers = []
+        self.markers = {}
         self.index = {}
 
     def set_tasks(self, tasks):

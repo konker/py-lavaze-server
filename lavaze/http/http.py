@@ -158,6 +158,9 @@ class HttpServer(object):
                 l = l.rstrip()
                 if l.startswith(COMMENT_CHAR):
                     continue
+                elif re.match('^\s*$', l):
+                    # Blank line, ignore
+                    pass
                 elif re.match('^\s*(\d+)\s*$', l):
                     # Number of records. Ignore for now.
                     pass
@@ -306,7 +309,10 @@ class HttpServer(object):
     def get_markers(self):
         trial_id = request.query.get('trial_id', TRIAL_ID)
         if trial_id in self.trials:
-            ret = self.trials[trial_id].markers
+            ret = []
+            print self.trials[trial_id].markers
+            for id,m in self.trials[trial_id].markers.iteritems():
+                ret.append(m)
         else:
             response.status = 500
             ret = {"status":"ERROR", "body":"No such trial id"}
@@ -338,7 +344,7 @@ class HttpServer(object):
                             'y': float(fields[2]),
                             'color': fields[3]
                         }
-                        markers[marker.id] = marker
+                        markers[marker['id']] = marker
             except:
                 response.status = 500
                 ret = {"status": "ERROR", "body": traceback.format_exc()}
@@ -347,6 +353,7 @@ class HttpServer(object):
 
             # NOTE: currently there is only 1 trial.
             # Re-uploading markers overwrites existing spec, if any.
+            print markers
             self.trials[trial_id].markers = markers
 
             ret = {"status": "OK", "body": "Registered %s markers" % len(markers)}

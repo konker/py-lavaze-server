@@ -560,7 +560,7 @@ var app = (function() {
                 var operator = $('#answer-relative-operator').val();
 
                 if (marker != '') {
-                    marker = parseInt(marker) - 1;
+                    marker = app.util.getMarkerIndex(marker);
                     var my = parseFloat(app.markerList.models[marker].get('y'));
                     var y = parseFloat(app.cur.task.model.get('f6'));
                     var relative = null;
@@ -666,6 +666,14 @@ var app = (function() {
                         + pad(d.getHours())+':'
                         + pad(d.getMinutes())+':'
                         + pad(d.getSeconds())
+            },
+            getMarkerIndex: function(markerId) {
+                for (var i=0; i<app.markerList.models.length; i++) {
+                    if (app.markerList.models[i].id == markerId) {
+                        return i;
+                    }
+                }
+                return -1;
             }
         },
         init: function() {
