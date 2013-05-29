@@ -322,7 +322,7 @@ class HttpServer(object):
             ret = {"status":"ERROR", "body":"No such trial id"}
         else:
             # parse the input txt
-            markers = []
+            markers = {}
             try:
                 markers_spec = request.files.get('markers-spec[]').file
                 for l in markers_spec:
@@ -338,7 +338,7 @@ class HttpServer(object):
                             'y': float(fields[2]),
                             'color': fields[3]
                         }
-                        markers.append(marker)
+                        markers[marker.id] = marker
             except:
                 response.status = 500
                 ret = {"status": "ERROR", "body": traceback.format_exc()}
@@ -446,15 +446,13 @@ class HttpServer(object):
         relabs = -1
         if '<' in answer:
             rel, marker = answer.split('<')
-            marker = int(marker) - 1
-            if marker > -1 and marker < len(self.trials[trial_id].markers):
+            if marker in self.trials[trial_id].markers:
                 y = self.trials[trial_id].markers[marker]['y']
                 relabs = y - float(rel)
 
         elif '>' in answer:
             rel, marker = answer.split('>')
-            marker = int(marker) - 1
-            if marker > -1 and marker < len(self.trials[trial_id].markers):
+            if marker in self.trials[trial_id].markers:
                 y = self.trials[trial_id].markers[marker]['y']
                 relabs = y + float(rel)
 
