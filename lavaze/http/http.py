@@ -28,7 +28,7 @@ COMMENT_CHAR = '#'
 TRIAL_ID = 'TRIAL0'
 SUBJECT_ID = 'SUBJECT0'
 STORAGE_HEADERS = ['timestamp', 'trial_id', 'device_id', 'subject_id', 'subject_height',
-                   'task_id', 'answer_abs', 'answer_rel_abs', 'answer_rel_raw', 'time_secs']
+                   'task_id', 'actual_answer_abs', 'actual_answer_rel', 'answer_abs', 'answer_rel_abs', 'answer_rel_raw', 'time_secs']
 
 
 class HttpServer(object):
@@ -293,10 +293,11 @@ class HttpServer(object):
         else:
             #[TODO: parse answer]
             answer_relabs, answer_raw = self._parse_answer(trial_id, answer)
+            actual_answer_abs, actual_answer_rel = self._get_actual_answers(trial_id, id, answer)
 
             # write answer to data file
             record = [timestamp, trial_id, device_id, self.subjects[subject_id]['name'], self.subjects[subject_id]['height'],
-                      id, absanswer, answer_relabs, answer_raw, time_secs] 
+                      id, actual_answer_abs, actual_answer_rel, absanswer, answer_relabs, answer_raw, time_secs] 
             self.storage.write_array(record)
             logging.debug("task_answer: wrote record: %s" % record)
 
@@ -467,6 +468,28 @@ class HttpServer(object):
             relabs = answer
 
         return relabs, answer
+
+    def _get_actual_answers(self, trial_id, task_id, answer):
+        actual_abs = None
+        actual_rel = None
+
+        if task_id in self.trials[trial_id].index:
+            idx = self.trials[trial_id].index[task_id]
+            actual_abs = float(self.trials[trial_id].tasks[idx]['f6'])
+
+            if '<' in answer:
+                rel, marker = answer.split('<')
+                if marker in self.trials[trial_id].markers:
+                    y = self.trials[trial_id].markers[marker]['y']
+                    actual_rel = "%s<%s" % ((y - actual_abs), marker)
+
+            elif '>' in answer:
+                rel, marker = answer.split('>')
+                if marker in self.trials[trial_id].markers:
+                    y = self.trials[trial_id].markers[marker]['y']
+                    actual_rel = "%s>%s" % ((actual_abs - y), marker)
+
+        return actual_abs, actual_rel
 
     
     # Helpers
